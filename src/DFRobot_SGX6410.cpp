@@ -279,7 +279,7 @@ bool DFRobot_SGX6410_I2C::begin(void) {
   if (!_pWire) return false;
 #if defined(ESP32) || defined(ESP8266)
   if (_sclPin != 0xFF || _sdaPin != 0xFF) {
-    _pWire->begin(_sclPin, _sdaPin);
+    _pWire->begin(_sdaPin, _sclPin);
   } else {
     _pWire->begin();
   }
