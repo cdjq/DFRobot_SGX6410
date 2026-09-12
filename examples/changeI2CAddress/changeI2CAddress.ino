@@ -1,0 +1,102 @@
+/*!
+ * @file changeI2CAddress.ino
+ * @brief Change and persist the SGX6410 I2C slave address.
+ * @details Writes the address to Flash Shadow, saves it to data Flash, then resets the SGX6410.
+ * @n Do not reset or remove power while saveFlash() is writing data Flash.
+ * @copyright Copyright (c) 2026 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @license The MIT License (MIT)
+ * @author [PLELES](li.jia@dfrobot.com)
+ * @version V1.0.0
+ * @date 2026-09-03
+ * @url https://github.com/cdjq/DFRobot_SGX6410
+ */
+#include "DFRobot_SGX6410.h"
+
+const uint8_t OLD_I2C_ADDRESS = 0x39;
+const uint8_t NEW_I2C_ADDRESS = 0x38;
+
+/* >> 1. Choose one communication method below. */
+#define SGX6410_COMM_UART
+// #define SGX6410_COMM_I2C
+
+#if defined(SGX6410_COMM_UART)
+/* ---------------------------------------------------------------------------------------------------------
+ *   SGX6410  |      MCU       | Leonardo/Mega2560/M0 | UNO | ESP8266 | ESP32 | Other Serial1 boards
+ *     VCC    |      3.3V      |        3.3V           | 3.3V|   3.3V  | 3.3V  |        3.3V
+ *     GND    |      GND       |        GND            | GND |   GND   | GND   |        GND
+ *      RX    |      TX        |     Serial1 TX1       |  7  |  GPIO5  |  37   |     Serial1 TX
+ *      TX    |      RX        |     Serial1 RX1       |  6  |  GPIO4  |  38   |     Serial1 RX
+ * --------------------------------------------------------------------------------------------------------- */
+  #if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
+    #include <SoftwareSerial.h>
+  #endif
+  #if defined(ARDUINO_AVR_UNO)
+    SoftwareSerial sgxSerial(/*rx =*/6, /*tx =*/7);
+    DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
+  #elif defined(ESP8266)
+    SoftwareSerial sgxSerial(/*rx =*/4, /*tx =*/5);
+    DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
+  #elif defined(ESP32)
+    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE, /*rx =*/38, /*tx =*/37);
+  #elif defined(ARDUINO_BBC_MICROBIT) && !defined(ARDUINO_BBC_MICROBIT_V2)
+    #error "BBC micro:bit has no usable UART. Select SGX6410_COMM_I2C."
+  #else
+    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
+  #endif
+#elif defined(SGX6410_COMM_I2C)
+  DFRobot_SGX6410_I2C sgx6410(&Wire, OLD_I2C_ADDRESS);
+#else
+  #error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"
+#endif
+
+void setup() {
+  // Open the debug serial port
+  Serial.begin(115200);
+  Serial.println("=== Change I2C Address Demo ===");
+  delay(1000);
+
+  // Initialize with the current (old) address
+  while (!sgx6410.begin()) {
+    Serial.println("SGX6410 init fail!");
+  }
+  Serial.println("SGX6410 init successfully!");
+  Serial.print("Changing I2C address from 0x");
+  Serial.print(OLD_I2C_ADDRESS, HEX);
+  Serial.print(" to 0x");
+  Serial.println(NEW_I2C_ADDRESS, HEX);
+  Serial.println("Keep power stable during this process.");
+
+  // Write the new address to Flash Shadow, then commit Flash
+  if (!sgx6410.writeFlash(SGX_I2C_ADDRESS_SHADOW_ADDR, NEW_I2C_ADDRESS)) {
+    Serial.println("Failed to write I2C address to Flash Shadow");
+    return;
+  }
+
+  uint8_t status = SGX_FDL_PARAMETER_ERROR;
+  if (!sgx6410.saveFlash(status)) {
+    Serial.println("Failed to receive Flash write status");
+    return;
+  }
+  if (status != SGX_FDL_OK) {
+    Serial.print("Flash write failed with status: 0x");
+    Serial.println(status, HEX);
+    return;
+  }
+  Serial.println("Flash write: OK");
+
+  Serial.println("I2C address saved to Flash.");
+  // Reset so the new I2C address takes effect
+  Serial.println("Now resetting sensor...");
+  if (!sgx6410.reset()) {
+    Serial.println("Failed to reset sensor");
+    return;
+  }
+  Serial.print("Sensor will restart with new address (0x");
+  Serial.print(NEW_I2C_ADDRESS, HEX);
+  Serial.println(").");
+  Serial.println("Please reconnect using the new address!");
+}
+
+void loop() {
+  // Address change runs once in setup()
+}

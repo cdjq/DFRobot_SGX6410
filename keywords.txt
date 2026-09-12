@@ -1,0 +1,79 @@
+#######################################
+# Syntax Coloring DFRobot_SGX6410
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DFRobot_SGX6410       KEYWORD1
+DFRobot_SGX6410_I2C   KEYWORD1
+DFRobot_SGX6410_UART  KEYWORD1
+sSGXMode_t            KEYWORD1
+sSGXDataType_t        KEYWORD1
+sSGXData_t             KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin                   KEYWORD2
+getProductID            KEYWORD2
+setOperationMode        KEYWORD2
+setHumidityCompensate   KEYWORD2
+runSensorClean          KEYWORD2
+getOperationMode        KEYWORD2
+update                  KEYWORD2
+getAllGasData           KEYWORD2
+getSingleGasData        KEYWORD2
+getTrackingNumber       KEYWORD2
+configGPIO              KEYWORD2
+getGPIO                 KEYWORD2
+setGPIO                 KEYWORD2
+clearGPIO               KEYWORD2
+readFlash               KEYWORD2
+writeFlash              KEYWORD2
+saveFlash               KEYWORD2
+readDebugData           KEYWORD2
+reset                   KEYWORD2
+isDataNew               KEYWORD2
+isDataValid             KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+SGX_I2C_ADDR            LITERAL1
+SGX_UART_BAUDRATE       LITERAL1
+SGX_UART_SYNC_BYTE      LITERAL1
+SGX_TIMEOUT_MS           LITERAL1
+SGX_WARMUP_IAQ_MS       LITERAL1
+SGX_WARMUP_ULP_MS       LITERAL1
+SGX_WARMUP_PBAQ_MS      LITERAL1
+SGX_CMD_GET_PRODUCT_ID  LITERAL1
+SGX_CMD_GET_TRACKING_NUMBER LITERAL1
+SGX_CMD_GET_OPERATION_MODE LITERAL1
+SGX_CMD_SET_OPERATION_MODE LITERAL1
+SGX_CMD_SET_HUMIDITY    LITERAL1
+SGX_CMD_GET_MEASUREMENT LITERAL1
+SGX_CMD_CONFIG_GPIO     LITERAL1
+SGX_CMD_GET_GPIO        LITERAL1
+SGX_CMD_SET_GPIO        LITERAL1
+SGX_CMD_CLEAR_GPIO      LITERAL1
+SGX_CMD_READ_FLASH      LITERAL1
+SGX_CMD_WRITE_FLASH     LITERAL1
+SGX_CMD_SAVE_FLASH      LITERAL1
+SGX_CMD_READ_DEBUG      LITERAL1
+SGX_CMD_RESET           LITERAL1
+CLEAN_OK                LITERAL1
+CLEAN_DONE              LITERAL1
+CLEAN_TIMEOUT           LITERAL1
+CLEAN_FAIL              LITERAL1
+SGX_FDL_IDLE            LITERAL1
+SGX_FDL_OK              LITERAL1
+SGX_FDL_BUSY            LITERAL1
+SGX_FDL_PROTECTION_ERROR LITERAL1
+SGX_FDL_ERASE_ERROR     LITERAL1
+SGX_FDL_BLANK_CHECK_ERROR LITERAL1
+SGX_FDL_WRITE_ERROR     LITERAL1
+SGX_FDL_PARAMETER_ERROR LITERAL1
