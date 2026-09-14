@@ -104,7 +104,6 @@ bool DFRobot_SGX6410::setHumidityCompensate(float rh) {
 uint8_t DFRobot_SGX6410::runSensorClean(uint32_t timeoutMs) {
   if (timeoutMs == 0) return CLEAN_TIMEOUT;
   if (!setOperationMode(SGX_MODE_SENSOR_CLEAN)) return CLEAN_FAIL;
-
   const unsigned long start = millis();
   bool sawCleaning = false;
   while ((uint32_t)(millis() - start) < timeoutMs) {
@@ -123,7 +122,7 @@ uint8_t DFRobot_SGX6410::runSensorClean(uint32_t timeoutMs) {
     } else if (mode != SGX_MODE_IAQ && mode != SGX_MODE_ULP && mode != SGX_MODE_PBAQ) {
       return CLEAN_FAIL;
     }
-    delay(100);
+    delay(10);
   }
   return CLEAN_TIMEOUT;
 }

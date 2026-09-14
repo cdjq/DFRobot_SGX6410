@@ -43,6 +43,8 @@ const uint8_t NEW_I2C_ADDRESS = 0x38;
   #else
     DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
   #endif
+
+  
 #elif defined(SGX6410_COMM_I2C)
   DFRobot_SGX6410_I2C sgx6410(&Wire, OLD_I2C_ADDRESS);
 #else

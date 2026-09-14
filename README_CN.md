@@ -1,9 +1,9 @@
 # DFRobot_SGX6410
 - [English Version](./README.md)
 
-DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器（SKU: SEN0771）的 Arduino 库。传感器用于评估室内空气质量，可输出 IAQ、TVOC、乙醇当量（ETOH）、估计 CO2（eCO2）和相对 IAQ（RelIAQ）。
+DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器的 Arduino 库。传感器用于评估室内空气质量，可输出 IAQ、TVOC、乙醇当量（ETOH）、估计 CO2（eCO2）和相对 IAQ（RelIAQ）。
 
-主机通过 I2C 或 UART 与 SGX6410 通信，两者使用同一套命令帧，而不是 Gravity 桥接寄存器表。I2C 7 位地址为 `0x38`；UART 默认 9600 8N1。
+主机通过 I2C 或 UART 与 SGX6410 通信，两者使用同一套命令帧。I2C 从机地址在 bit6:0（7 位，默认 `0x38`）；可编程地址字节的 bit7 忽略。UART 默认 9600 8N1。
 
 典型流程：调用 `begin()` 校验产品 ID `0x2310` 并读取 6 字节序列号，设置工作模式（IAQ / ULP / PBAQ / Suspend），等待预热完成（`valid` 为 true），再调用 `update()` 读取缓存的气体数据。湿度可按 0–100 %RH 手动写入。
 
@@ -24,7 +24,7 @@ SKU: SEN0771
 
 ## 概述
 
-* 双接口：I2C（默认地址 `0x38`）或 UART 命令帧，9600 8N1
+* 双接口：I2C（bit6:0 为 7 位从机地址，默认 `0x38`，bit7 忽略）或 UART 命令帧，9600 8N1
 * `begin()` 校验产品 ID `0x2310` 并读取 6 字节序列号
 * 工作模式：Suspend；IAQ（约 3 s 采样，预热约 5 min）；ULP（约 90 s 采样，预热约 15 min）；PBAQ（约 5 s 采样，预热约 5 min）
 * `update()` 按模式换算：IAQ/ULP 为 IAQ=raw/10、TVOC=raw/100 mg/m³、ETOH=raw/100 ppm、eCO2=raw ppm、RelIAQ=raw/10；PBAQ 仅输出 TVOC/ETOH（raw/1000），其余为 NAN
@@ -80,7 +80,8 @@ SKU: SEN0771
    * @fn DFRobot_SGX6410_I2C
    * @brief 构造函数
    * @param pWire I2C 对象指针，通常为 &Wire
-   * @param address 7 位 I2C 地址，默认 0x38
+   * @param address 7 位 I2C 地址（bit6:0），默认 0x38
+   * @n 可编程 I2C 地址字节：bit7 忽略，bit6:0 为从机地址（0x00-0x7F）。
    * @param sclPin SCL 引脚，默认 0xFF（板级默认）
    * @param sdaPin SDA 引脚，默认 0xFF（板级默认）
    * @n ESP32/ESP8266：传入 sclPin/sdaPin 可改 I2C 引脚，省略则用板级默认脚。
@@ -264,7 +265,8 @@ SKU: SEN0771
    * @fn readFlash
    * @brief 从 Flash Shadow 区读取 1 字节
    * @param address 1 字节 Flash Shadow 地址
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR（0x00）：I2C 地址
+   * @n SGX_I2C_ADDRESS_SHADOW_ADDR（0x00）：I2C 地址字节
+   * @n   bit7 忽略；bit6:0 为 7 位从机地址（0x00-0x7F），默认 0x38
    * @n SGX_STARTUP_MODE_SHADOW_ADDR（0x03）：启动工作模式
    * @param data 读出的字节
    * @return bool
@@ -278,9 +280,11 @@ SKU: SEN0771
    * @fn writeFlash
    * @brief 向 Flash Shadow 区写入 1 字节
    * @param address 1 字节 Flash Shadow 地址
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR（0x00）：I2C 地址
+   * @n SGX_I2C_ADDRESS_SHADOW_ADDR（0x00）：I2C 地址字节
+   * @n   bit7 忽略；bit6:0 为 7 位从机地址（0x00-0x7F），默认 0x38
    * @n SGX_STARTUP_MODE_SHADOW_ADDR（0x03）：启动工作模式
    * @param data 要写入的字节
+   * @n 写 I2C 地址（Shadow 0x00）时：bit7 忽略，bit6:0 为从机地址 0x00-0x7F
    * @return bool
    * @retval true  命令发送成功
    * @retval false 不支持的地址或写入失败

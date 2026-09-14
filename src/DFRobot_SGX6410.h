@@ -22,14 +22,14 @@
 #endif
 
 #define SGX_TIMEOUT_MS               100     ///< Command response timeout in ms
-#define SGX_I2C_ADDR                 0x38    ///< Default 7-bit I2C address
+#define SGX_I2C_ADDR                 0x38    ///< Default 7-bit I2C slave address (bits 6:0)
 #define SGX_UART_BAUDRATE            9600    ///< Default UART baud rate
 #define SGX_UART_SYNC_BYTE           0xFF    ///< UART command-frame synchronization byte
 
 #define SGX_WARMUP_IAQ_MS            300000UL  ///< IAQ 2nd Gen warm-up time in ms
 #define SGX_WARMUP_ULP_MS            900000UL  ///< ULP warm-up time in ms
 #define SGX_WARMUP_PBAQ_MS           300000UL  ///< PBAQ warm-up time in ms
-#define SGX_I2C_ADDRESS_SHADOW_ADDR  0x00    ///< Flash Shadow address for I2C address
+#define SGX_I2C_ADDRESS_SHADOW_ADDR  0x00    ///< Flash Shadow: I2C address byte (bit7 don't care, bits 6:0 slave address)
 #define SGX_STARTUP_MODE_SHADOW_ADDR 0x03    ///< Flash Shadow address for startup mode
 
 #define SGX_CMD_GET_PRODUCT_ID       0x00    ///< Get product ID
@@ -276,7 +276,8 @@ public:
    * @fn readFlash
    * @brief Read one byte from the Flash Shadow area
    * @param address One-byte Flash Shadow address
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address
+   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address byte
+   * @n   bit 7 = don't care; bits 6:0 = 7-bit slave address (0x00-0x7F), default 0x38
    * @n SGX_STARTUP_MODE_SHADOW_ADDR (0x03): startup operation mode
    * @param data Output byte read from the requested address
    * @return bool
@@ -290,9 +291,11 @@ public:
    * @fn writeFlash
    * @brief Write one byte to the Flash Shadow area
    * @param address One-byte Flash Shadow address
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address
+   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address byte
+   * @n   bit 7 = don't care; bits 6:0 = 7-bit slave address (0x00-0x7F), default 0x38
    * @n SGX_STARTUP_MODE_SHADOW_ADDR (0x03): startup operation mode
    * @param data Byte to write
+   * @n For I2C address (shadow 0x00): bit 7 = don't care; bits 6:0 = slave address 0x00-0x7F
    * @return bool
    * @retval true  Command sent successfully
    * @retval false Unsupported address or write failed
@@ -373,7 +376,8 @@ public:
    * @fn DFRobot_SGX6410_I2C
    * @brief Constructor
    * @param pWire I2C object pointer, typically &Wire
-   * @param address 7-bit I2C address, default 0x38
+   * @param address 7-bit I2C address (bits 6:0), default 0x38
+   * @n The programmable I2C address byte uses bit 7 = don't care, bits 6:0 = slave address (0x00-0x7F).
    * @param sclPin SCL pin, default 0xFF (board default)
    * @param sdaPin SDA pin, default 0xFF (board default)
    * @n ESP32/ESP8266: pass sclPin/sdaPin to remap I2C, or omit them to use the board default pins.

@@ -15,8 +15,8 @@
 #include "DFRobot_SGX6410.h"
 
 /* >> 1. Choose one communication method below. */
-#define SGX6410_COMM_UART
-// #define SGX6410_COMM_I2C
+// #define SGX6410_COMM_UART
+#define SGX6410_COMM_I2C
 
 #if defined(SGX6410_COMM_UART)
 /* ---------------------------------------------------------------------------------------------------------
@@ -51,6 +51,7 @@
 void setup() {
   // Open the debug serial port
   Serial.begin(115200);
+  delay(1000);
   Serial.println("=== Sensor Clean Demo ===");
 
   // Initialize the sensor. Cleaning is not started at boot

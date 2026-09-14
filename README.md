@@ -3,7 +3,7 @@
 
 DFRobot_SGX6410 is the Arduino library for the SGX6410 MEMS air quality sensor (SKU: SEN0771). The sensor estimates indoor air quality and reports IAQ, TVOC, ethanol equivalent (ETOH), estimated CO2 (eCO2), and relative IAQ (RelIAQ).
 
-The host talks to the SGX6410 over I2C or UART using the same command frame, not a Gravity bridge register map. I2C uses 7-bit address `0x38`. UART defaults to 9600 8N1.
+The host talks to the SGX6410 over I2C or UART using the same command frame, not a Gravity bridge register map. I2C uses a 7-bit slave address in bits 6:0 (default `0x38`); bit 7 of the programmable address byte is don't care. UART defaults to 9600 8N1.
 
 Typical workflow: call `begin()` to verify product ID `0x2310` and the 6-byte tracking number, set an operation mode (IAQ / ULP / PBAQ / Suspend), wait until warm-up completes (`valid` is true), then call `update()` and read the cached gas data. Humidity can be written manually as 0–100 %RH.
 
@@ -24,7 +24,7 @@ SKU: SEN0771
 
 ## Summary
 
-* Dual interface: I2C (default address `0x38`) or UART command frames, 9600 8N1
+* Dual interface: I2C (7-bit slave address in bits 6:0, default `0x38`; bit 7 = don't care) or UART command frames, 9600 8N1
 * `begin()` verifies product ID `0x2310` and reads the 6-byte tracking number
 * Operation modes: Suspend; IAQ (~3 s sample, ~5 min warm-up); ULP (~90 s sample, ~15 min warm-up); PBAQ (~5 s sample, ~5 min warm-up)
 * `update()` scales the measurement frame: IAQ/ULP use IAQ=raw/10, TVOC=raw/100 mg/m³, ETOH=raw/100 ppm, eCO2=raw ppm, RelIAQ=raw/10; PBAQ only reports TVOC/ETOH (raw/1000), other fields are NAN
@@ -80,7 +80,8 @@ SKU: SEN0771
    * @fn DFRobot_SGX6410_I2C
    * @brief Constructor
    * @param pWire I2C object pointer, typically &Wire
-   * @param address 7-bit I2C address, default 0x38
+   * @param address 7-bit I2C address (bits 6:0), default 0x38
+   * @n The programmable I2C address byte uses bit 7 = don't care, bits 6:0 = slave address (0x00-0x7F).
    * @param sclPin SCL pin, default 0xFF (board default)
    * @param sdaPin SDA pin, default 0xFF (board default)
    * @n ESP32/ESP8266: pass sclPin/sdaPin to remap I2C, or omit them to use the board default pins.
@@ -265,7 +266,8 @@ SKU: SEN0771
    * @fn readFlash
    * @brief Read one byte from the Flash Shadow area
    * @param address One-byte Flash Shadow address
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address
+   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address byte
+   * @n   bit 7 = don't care; bits 6:0 = 7-bit slave address (0x00-0x7F), default 0x38
    * @n SGX_STARTUP_MODE_SHADOW_ADDR (0x03): startup operation mode
    * @param data Output byte read from the requested address
    * @return bool
@@ -279,9 +281,11 @@ SKU: SEN0771
    * @fn writeFlash
    * @brief Write one byte to the Flash Shadow area
    * @param address One-byte Flash Shadow address
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address
+   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address byte
+   * @n   bit 7 = don't care; bits 6:0 = 7-bit slave address (0x00-0x7F), default 0x38
    * @n SGX_STARTUP_MODE_SHADOW_ADDR (0x03): startup operation mode
    * @param data Byte to write
+   * @n For I2C address (shadow 0x00): bit 7 = don't care; bits 6:0 = slave address 0x00-0x7F
    * @return bool
    * @retval true  Command sent successfully
    * @retval false Unsupported address or write failed

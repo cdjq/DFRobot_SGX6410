@@ -56,23 +56,6 @@ void setup() {
   }
   Serial.println("SGX6410 init success!");
 
-  // Print the six-byte tracking number
-  uint8_t trackingNum[6] = {0};
-  if (sgx6410.getTrackingNumber(trackingNum)) {
-    Serial.print("Tracking number: ");
-    for (uint8_t i = 0; i < 6; i++) {
-      if (trackingNum[i] < 0x10) {
-        Serial.print('0');
-      }
-      Serial.print(trackingNum[i], HEX);
-      if (i < 5) {
-        Serial.print(' ');
-      }
-    }
-    Serial.println();
-  } else {
-    Serial.println("Failed to read tracking number!");
-  }
 
   // IAQ: about 3 s sample period, 5 min warm-up
   if (!sgx6410.setOperationMode(DFRobot_SGX6410::SGX_MODE_IAQ)) {

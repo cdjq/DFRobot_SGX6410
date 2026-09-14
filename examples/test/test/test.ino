@@ -1,21 +1,22 @@
 /**
- * @file  interrupt_readData.ino
- * @brief  Read SGX6410 gas data when the INT signal is asserted.
- * @details  INT is high when a sample is ready and returns low after the
- *           result is read. The interrupt only schedules the read; gas data
- *           is still obtained by the host with Get Measurement Results (0x18).
- * @copyright   Copyright (c) 2026 DFRobot Co.Ltd (http://www.dfrobot.com)
- * @license     The MIT License (MIT)
+ * @file  sensorClean.ino
+ * @brief Run the SGX6410 one-time sensor cleaning sequence on request.
+ *
+ * Cleaning takes about 60 seconds and must not be interrupted. Start it by
+ * sending 'c' in the Serial Monitor. The example does not start cleaning
+ * automatically at boot.
+ * @copyright Copyright (c) 2026 DFRobot Co.Ltd (http://www.dfrobot.com)
+ * @license The MIT License (MIT)
  * @author [PLELES](li.jia@dfrobot.com)
- * @version     V1.0.0
- * @date        2026-09-03
- * @url         https://github.com/cdjq/DFRobot_SGX6410
+ * @version V1.0.0
+ * @date 2026-09-03
+ * @url https://github.com/cdjq/DFRobot_SGX6410
  */
 #include "DFRobot_SGX6410.h"
 
 /* >> 1. Choose one communication method below. */
-#define SGX6410_COMM_UART
-// #define SGX6410_COMM_I2C
+// #define SGX6410_COMM_UART
+#define SGX6410_COMM_I2C
 
 #if defined(SGX6410_COMM_UART)
 /* ---------------------------------------------------------------------------------------------------------
@@ -35,93 +36,64 @@
     SoftwareSerial sgxSerial(/*rx =*/4, /*tx =*/5);
     DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
   #elif defined(ESP32)
-    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE,
-                                 /*rx =*/38, /*tx =*/37);
+    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE, /*rx =*/38, /*tx =*/37);
   #elif defined(ARDUINO_BBC_MICROBIT) && !defined(ARDUINO_BBC_MICROBIT_V2)
     #error "BBC micro:bit has no usable UART. Select SGX6410_COMM_I2C."
   #else
     DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
   #endif
 #elif defined(SGX6410_COMM_I2C)
-  DFRobot_SGX6410_I2C sgx6410(&Wire, SGX_I2C_ADDR);
+  DFRobot_SGX6410_I2C sgx6410(&Wire, SGX_I2C_ADDR,8,7);
 #else
   #error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"
 #endif
 
-volatile bool dataReady = false;
-
-#if defined(ESP8266)
-void IRAM_ATTR sgxInterrupt() {
-#else
-void sgxInterrupt() {
-#endif
-  dataReady = true;
-}
-
 void setup() {
+  // Open the debug serial port
   Serial.begin(115200);
-  Serial.println("=== Interrupt Read Data Demo ===");
+  Serial.println("=== Sensor Clean Demo ===");
 
+  // Initialize the sensor. Cleaning is not started at boot
   while (!sgx6410.begin()) {
     Serial.println("SGX6410 init fail!");
   }
-  Serial.println("SGX6410 init success!");
-
-  if (!sgx6410.setOperationMode(DFRobot_SGX6410::SGX_MODE_IAQ)) {
-    Serial.println("Failed to set IAQ mode!");
+   Serial.println("SGX6410 init sucess!");
+  delay(200);
+  if(!sgx6410.setOperationMode(DFRobot_SGX6410::SGX_MODE_SENSOR_CLEAN)){
+    Serial.println("set mode failed");
+    while(1);
   }
-  delay(100);
-
-  // Same interrupt pin choices as the BMP58X interrupt example.
-#if defined(ESP32)
-  const uint8_t interruptPin = 20;  // D6
-  pinMode(interruptPin, INPUT_PULLDOWN);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), sgxInterrupt, RISING);
-#elif defined(ESP8266)
-  const uint8_t interruptPin = 13;  // I2C example: D7
-  // Use an external 10 kOhm pulldown if INPUT_PULLDOWN is unavailable.
-  pinMode(interruptPin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), sgxInterrupt, RISING);
-#elif defined(ARDUINO_SAM_ZERO)
-  const uint8_t interruptPin = 6;
-  pinMode(interruptPin, INPUT_PULLDOWN);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), sgxInterrupt, RISING);
-#else
-  // UNO: use digital pin 2 as interrupt pin.
-  const uint8_t interruptPin = 2;
-  // UNO has no universal INPUT_PULLDOWN; add a 10 kOhm pulldown to GND.
-  pinMode(interruptPin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(interruptPin), sgxInterrupt, RISING);
-#endif
+  Serial.println("SetMode OK");
+  if(!sgx6410.getOperationMode()){
+    Serial.println("get mode failed");
+  }
+  Serial.println("get mode OK");
+  // Serial.println("SGX6410 init success!");
+  // Serial.println("Send 'c' to start one-time sensor cleaning.");
+  // Serial.println("Warning: keep power stable; do not interrupt cleaning.");
 }
 
 void loop() {
-  if (!dataReady) {
-    return;
-  }
-  dataReady = false;
+  // // Wait for 'c'. Cleaning is one-time and should not be started automatically
+  // if (!Serial.available()) return;
+  // char command = (char)Serial.read();
+  // if (command != 'c' && command != 'C') return;
 
-  if (!sgx6410.update()) {
-    Serial.println("Failed to read gas data!");
-    return;
-  }
-  const DFRobot_SGX6410::sSGXData_t &data = sgx6410.getAllGasData();
-  if (!data.isNew) return;
-
-  Serial.print("IAQ:      ");
-  Serial.println(data.IAQ, 2);
-  Serial.print("TVOC:     ");
-  Serial.print(data.TVOC, 2);
-  Serial.println(" mg/m3");
-  Serial.print("ETOH:     ");
-  Serial.print(data.ETOH, 2);
-  Serial.println(" ppm");
-  Serial.print("ECO2:     ");
-  Serial.print((uint16_t)data.ECO2);
-  Serial.println(" ppm");
-  Serial.print("RELIAQ:   ");
-  Serial.println(data.RELIAQ, 2);
-  Serial.print("Data valid: ");
-  Serial.println(data.valid ? "YES" : "NO (warming up)");
-  Serial.println("--------------------");
+  // // About 60 s. Do not reset or remove power while cleaning
+  // Serial.println("Cleaning started; wait at least 60 seconds...");
+  // uint8_t result = sgx6410.runSensorClean(90000);
+  // switch (result) {
+  //   case CLEAN_OK:
+  //     Serial.println("Cleaning completed successfully.");
+  //     break;
+  //   case CLEAN_DONE:
+  //     Serial.println("Cleaning was already performed.");
+  //     break;
+  //   case CLEAN_TIMEOUT:
+  //     Serial.println("Cleaning timed out; keep the sensor powered and inspect it.");
+  //     break;
+  //   default:
+  //     Serial.println("Cleaning failed due to communication error.");
+  //     break;
+  // }
 }
