@@ -29,7 +29,7 @@ def setup():
   sensor.set_operation_mode(DFRobot_SGX6410.SGX_MODE_IAQ)
   # INT goes high when a sample is ready; update() still reads the data
   GPIO.setmode(GPIO.BCM)
-  GPIO.setup(INT_GPIO, GPIO.IN)
+  GPIO.setup(INT_GPIO, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
   GPIO.add_event_detect(INT_GPIO, GPIO.RISING, callback=on_data_ready)
 
 

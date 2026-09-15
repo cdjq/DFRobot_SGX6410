@@ -50,6 +50,19 @@
 
 volatile uint8_t interruptFlag = 0;
 
+/*
+ * Select the controller pin connected to the SGX6410 INT output.
+ * The same pin is used for both UART and I2C communication modes.
+ *
+ * ESP32 DevKit: D5 = GPIO5
+ * ESP8266 NodeMCU: D6 = GPIO12
+ */
+#if defined(ESP32)
+const uint8_t interruptPin = 5;   // D5 / GPIO5
+#elif defined(ESP8266)
+const uint8_t interruptPin = 12;  // D6 / GPIO12
+#endif
+
 #if defined(ESP8266)
 void IRAM_ATTR sgxInterrupt() {
 #else
@@ -67,7 +80,6 @@ void setup() {
 
   // Initialize the sensor and verify product ID 0x2310
   while (!sgx6410.begin()) {
-    Serial.println("SGX6410 init fail!");
   }
   Serial.println("SGX6410 init success!");
 
@@ -107,7 +119,12 @@ void setup() {
    * For controllers that use the GPIO pin number as the interrupt number, consult
    * the controller documentation and replace 0 with the selected pin number.
    */
+#if defined(ESP32) || defined(ESP8266)
+  pinMode(interruptPin, INPUT_PULLDOWN);
+  attachInterrupt(digitalPinToInterrupt(interruptPin), sgxInterrupt, RISING);
+#else
   attachInterrupt(/* Interrupt No */ 0, sgxInterrupt, RISING);
+#endif
 }
 
 void loop() {
