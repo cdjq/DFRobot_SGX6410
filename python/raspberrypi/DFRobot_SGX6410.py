@@ -51,10 +51,6 @@ SGX_CMD_WRITE_FLASH = 0x41
 SGX_CMD_SAVE_FLASH = 0x42
 SGX_CMD_RESET = 0x8F
 
-CLEAN_OK = 0
-CLEAN_DONE = 1
-CLEAN_TIMEOUT = 2
-CLEAN_FAIL = 3
 
 SGX_FDL_IDLE = 0x30
 SGX_FDL_OK = 0x00
@@ -89,7 +85,6 @@ class DFRobot_SGX6410(object):
   SGX_MODE_IAQ = 0x01
   SGX_MODE_ULP = 0x02
   SGX_MODE_PBAQ = 0x05
-  SGX_MODE_SENSOR_CLEAN = 0x80
   SGX_DATA_IAQ = 0
   SGX_DATA_TVOC = 1
   SGX_DATA_ETOH = 2
@@ -175,11 +170,10 @@ class DFRobot_SGX6410(object):
       @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
       @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
       @n Mode change is a maintenance action. The host restarts warm-up and clears is_new/valid.
-      @n Sensor cleaning 0x80 should be started with run_sensor_clean(), not called repeatedly.
       @return True on success, False on failure
     '''
     if mode not in (self.SGX_MODE_SUSPEND, self.SGX_MODE_IAQ, self.SGX_MODE_ULP,
-                    self.SGX_MODE_PBAQ, self.SGX_MODE_SENSOR_CLEAN):
+                    self.SGX_MODE_PBAQ):
       return False
     if not self._write_cmd(SGX_CMD_SET_OPERATION_MODE, [mode]):
       return False
@@ -203,33 +197,6 @@ class DFRobot_SGX6410(object):
       return False
     return self._write_cmd(SGX_CMD_SET_HUMIDITY, [int((rh / 100.0) * 255.0) & 0xFF])
 
-  def run_sensor_clean(self, timeout_ms):
-    '''!
-      @brief Run the sensor thermal-clean sequence: start clean, then poll until done
-      @param timeout_ms Timeout in ms, recommend >= 90000 (clean takes about 60 s)
-      @return CLEAN_OK=0 finished / CLEAN_DONE=1 already cleaned / CLEAN_TIMEOUT=2 timeout / CLEAN_FAIL=3 comm error
-      @n The sensor should be cleaned only once in its lifetime.
-      @n Writes SGX_MODE_SENSOR_CLEAN (0x80) and polls the mode: 0x80 still cleaning, 0x00 finished.
-      @n If the mode is already Suspend without observing clean, returns CLEAN_DONE.
-    '''
-    if timeout_ms == 0 or not self.set_operation_mode(self.SGX_MODE_SENSOR_CLEAN):
-      return CLEAN_TIMEOUT if timeout_ms == 0 else CLEAN_FAIL
-    start = self._millis()
-    saw_cleaning = False
-    while self._millis() - start < timeout_ms:
-      mode = self.get_operation_mode()
-      if mode == self.SGX_MODE_SENSOR_CLEAN:
-        saw_cleaning = True
-      elif mode == self.SGX_MODE_SUSPEND:
-        self._sample_counter_new = False
-        self._gas_data.is_new = False
-        self._gas_data.valid = False
-        return CLEAN_OK if saw_cleaning else CLEAN_DONE
-      elif mode not in (self.SGX_MODE_IAQ, self.SGX_MODE_ULP, self.SGX_MODE_PBAQ):
-        return CLEAN_FAIL
-      time.sleep(0.1)
-    return CLEAN_TIMEOUT
-
   def get_operation_mode(self):
     '''!
       @brief Read the current SGX6410 operation mode
@@ -249,7 +216,7 @@ class DFRobot_SGX6410(object):
       @n Call this before get_all_gas_data() / get_single_gas_data().
       @n IAQ/ULP: IAQ = raw/10, TVOC = raw/100 mg/m3, ETOH = raw/100 ppm, ECO2 = raw ppm, RELIAQ = raw/10
       @n PBAQ: TVOC = raw/1000 mg/m3, ETOH = raw/1000 ppm; IAQ, ECO2 and RELIAQ are NAN
-      @n Suspend and sensor-clean modes have no measurement payload and return False.
+      @n Suspend mode has no measurement payload and return False.
       @n is_new follows the sample-counter byte. valid is true only after mode warm-up.
     '''
     self._gas_data.is_new = False

@@ -30,7 +30,7 @@ SKU: SEN0771
 * `update()` scales the measurement frame: IAQ/ULP use IAQ=raw/10, TVOC=raw/100 mg/m³, ETOH=raw/100 ppm, eCO2=raw ppm, RelIAQ=raw/10; PBAQ only reports TVOC/ETOH (raw/1000), other fields are NAN
 * Check `is_new` for a fresh sample and `valid` for warm-up completion before using the readings
 * Manual humidity compensation: write 0–100 %RH (stored as code 0–255)
-* GPIO1 direction/level, Flash Shadow I2C address and startup mode, and one-time thermal clean via `run_sensor_clean()`
+* GPIO1 direction/level, Flash Shadow I2C address and startup mode
 
 ## Installation
 
@@ -102,7 +102,6 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
       @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
       @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
       @n Mode change is a maintenance action. The host restarts warm-up and clears is_new/valid.
-      @n Sensor cleaning 0x80 should be started with run_sensor_clean(), not called repeatedly.
       @return True on success, False on failure
     '''
 
@@ -113,16 +112,6 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
       @n Host converts rh to code = (rh / 100) * 255 and writes the 0-255 code.
       @n The default compensation value is 50.0 %RH when this method is not called.
       @return True on success, False on failure
-    '''
-
-  def run_sensor_clean(self, timeout_ms)
-    '''!
-      @brief Run the sensor thermal-clean sequence: start clean, then poll until done
-      @param timeout_ms Timeout in ms, recommend >= 90000 (clean takes about 60 s)
-      @return CLEAN_OK=0 finished / CLEAN_DONE=1 already cleaned / CLEAN_TIMEOUT=2 timeout / CLEAN_FAIL=3 comm error
-      @n The sensor should be cleaned only once in its lifetime.
-      @n Writes SGX_MODE_SENSOR_CLEAN (0x80) and polls the mode: 0x80 still cleaning, 0x00 finished.
-      @n If the mode is already Suspend without observing clean, returns CLEAN_DONE.
     '''
 
   def get_operation_mode(self)
@@ -139,7 +128,7 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
       @n Call this before get_all_gas_data() / get_single_gas_data().
       @n IAQ/ULP: IAQ = raw/10, TVOC = raw/100 mg/m3, ETOH = raw/100 ppm, ECO2 = raw ppm, RELIAQ = raw/10
       @n PBAQ: TVOC = raw/1000 mg/m3, ETOH = raw/1000 ppm; IAQ, ECO2 and RELIAQ are NAN
-      @n Suspend and sensor-clean modes have no measurement payload and return False.
+      @n Suspend mode has no measurement payload and return False.
       @n is_new follows the sample-counter byte. valid is true only after mode warm-up.
     '''
 

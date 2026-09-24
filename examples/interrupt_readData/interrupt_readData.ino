@@ -80,6 +80,7 @@ void setup() {
 
   // Initialize the sensor and verify product ID 0x2310
   while (!sgx6410.begin()) {
+     Serial.println("SGX6410 init failed");
   }
   Serial.println("SGX6410 init success!");
 

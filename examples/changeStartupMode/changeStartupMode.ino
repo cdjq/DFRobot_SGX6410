@@ -54,7 +54,6 @@ const char* getModeName(uint8_t mode) {
     case DFRobot_SGX6410::SGX_MODE_IAQ:         return "IAQ";
     case DFRobot_SGX6410::SGX_MODE_ULP:         return "ULP";
     case DFRobot_SGX6410::SGX_MODE_PBAQ:        return "PBAQ";
-    case DFRobot_SGX6410::SGX_MODE_SENSOR_CLEAN: return "SENSOR_CLEAN";
     default: return "UNKNOWN";
   }
 }

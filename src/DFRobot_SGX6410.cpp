@@ -101,32 +101,6 @@ bool DFRobot_SGX6410::setHumidityCompensate(float rh) {
   return writeCmd(SGX_CMD_SET_HUMIDITY, &code, 1);
 }
 
-uint8_t DFRobot_SGX6410::runSensorClean(uint32_t timeoutMs) {
-  if (timeoutMs == 0) return CLEAN_TIMEOUT;
-  if (!setOperationMode(SGX_MODE_SENSOR_CLEAN)) return CLEAN_FAIL;
-  const unsigned long start = millis();
-  bool sawCleaning = false;
-  while ((uint32_t)(millis() - start) < timeoutMs) {
-    uint8_t mode = SGX_MODE_SUSPEND;
-    if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &mode, 1)) return CLEAN_FAIL;
-    _mode = (sSGXMode_t)mode;
-    if (mode == SGX_MODE_SENSOR_CLEAN) {
-      sawCleaning = true;
-    } else if (mode == SGX_MODE_SUSPEND) {
-      // SUSPEND without observing CLEAN means the one-time operation was
-      // already consumed. Otherwise it marks a completed cleaning cycle.
-      _sampleCounterNew = false;
-      _gasData.isNew = false;
-      _gasData.valid = false;
-      return sawCleaning ? CLEAN_OK : CLEAN_DONE;
-    } else if (mode != SGX_MODE_IAQ && mode != SGX_MODE_ULP && mode != SGX_MODE_PBAQ) {
-      return CLEAN_FAIL;
-    }
-    delay(10);
-  }
-  return CLEAN_TIMEOUT;
-}
-
 uint8_t DFRobot_SGX6410::getOperationMode(void) {
   uint8_t value = SGX_MODE_SUSPEND;
   if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &value, 1)) return SGX_MODE_SUSPEND;

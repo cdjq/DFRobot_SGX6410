@@ -30,7 +30,7 @@ SKU: SEN0771
 * `update()` scales the measurement frame: IAQ/ULP use IAQ=raw/10, TVOC=raw/100 mg/m³, ETOH=raw/100 ppm, eCO2=raw ppm, RelIAQ=raw/10; PBAQ only reports TVOC/ETOH (raw/1000), other fields are NAN
 * Check `isNew` for a fresh sample and `valid` for warm-up completion before using the readings
 * Manual humidity compensation: write 0–100 %RH (stored as code 0–255)
-* GPIO1 direction/level, Flash Shadow I2C address and startup mode, and one-time thermal clean via `runSensorClean()`
+* GPIO1 direction/level, Flash Shadow I2C address and startup mode
 
 ## Installation
 
@@ -133,7 +133,6 @@ SKU: SEN0771
    * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
    * @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
-   * @n Sensor cleaning 0x80 should be started with runSensorClean(), not called repeatedly.
    * @return bool
    * @retval true  Setting successful
    * @retval false Setting failed
@@ -153,18 +152,6 @@ SKU: SEN0771
   bool setHumidityCompensate(float rh);
 
   /**
-   * @fn runSensorClean
-   * @brief Run the sensor thermal-clean sequence: start clean, then poll until done
-   * @param timeoutMs Timeout in ms, recommend >= 90000 (clean takes about 60 s)
-   * @return uint8_t CLEAN_OK=0 finished / CLEAN_DONE=1 already cleaned / CLEAN_TIMEOUT=2 timeout / CLEAN_FAIL=3 comm error
-   * @warning Interrupting clean can permanently damage the sensing material. Keep power stable.
-   * @n The sensor should be cleaned only once in its lifetime.
-   * @n Writes SGX_MODE_SENSOR_CLEAN (0x80) and polls the mode register: 0x80 still cleaning, 0x00 finished.
-   * @n If the mode is already Suspend without observing clean, returns CLEAN_DONE.
-   */
-  uint8_t runSensorClean(uint32_t timeoutMs);
-
-  /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
    * @return uint8_t Current mode command byte
@@ -182,7 +169,7 @@ SKU: SEN0771
    * @n Call this before getAllGasData() / getSingleGasData().
    * @n IAQ/ULP: IAQ = raw/10, TVOC = raw/100 mg/m3, ETOH = raw/100 ppm, ECO2 = raw ppm, RELIAQ = raw/10
    * @n PBAQ: TVOC = raw/1000 mg/m3, ETOH = raw/1000 ppm; IAQ, ECO2 and RELIAQ are NAN
-   * @n Suspend and sensor-clean modes have no measurement payload and return false.
+   * @n Suspend mode has no measurement payload and return false.
    * @n isNew follows the sample-counter byte. valid is true only after mode warm-up.
    */
   bool update(void);

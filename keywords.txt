@@ -21,7 +21,6 @@ begin                   KEYWORD2
 getProductID            KEYWORD2
 setOperationMode        KEYWORD2
 setHumidityCompensate   KEYWORD2
-runSensorClean          KEYWORD2
 getOperationMode        KEYWORD2
 update                  KEYWORD2
 getAllGasData           KEYWORD2
@@ -65,10 +64,6 @@ SGX_CMD_WRITE_FLASH     LITERAL1
 SGX_CMD_SAVE_FLASH      LITERAL1
 SGX_CMD_READ_DEBUG      LITERAL1
 SGX_CMD_RESET           LITERAL1
-CLEAN_OK                LITERAL1
-CLEAN_DONE              LITERAL1
-CLEAN_TIMEOUT           LITERAL1
-CLEAN_FAIL              LITERAL1
 SGX_FDL_IDLE            LITERAL1
 SGX_FDL_OK              LITERAL1
 SGX_FDL_BUSY            LITERAL1

@@ -30,7 +30,7 @@ SKU: SEN0771
 * `update()` 按模式换算：IAQ/ULP 为 IAQ=raw/10、TVOC=raw/100 mg/m³、ETOH=raw/100 ppm、eCO2=raw ppm、RelIAQ=raw/10；PBAQ 仅输出 TVOC/ETOH（raw/1000），其余为 NAN
 * 使用数据前请检查 `is_new`（是否新样本）和 `valid`（预热是否完成）
 * 手动湿度补偿：写入 0–100 %RH（内部存为 0–255 码）
-* 支持 GPIO1 方向/电平、Flash Shadow 中的 I2C 地址与启动模式，以及通过 `run_sensor_clean()` 执行一次性热清洁
+* 支持 GPIO1 方向/电平、Flash Shadow 中的 I2C 地址与启动模式
 
 ## 库安装
 
@@ -102,7 +102,6 @@ python3 examples/polling_read_data/polling_read_data.py
       @n SGX_MODE_ULP: 超低功耗，采样周期约 90 s，预热 15 min
       @n SGX_MODE_PBAQ: PBAQ，采样周期约 5 s，预热 5 min
       @n 改模式属于维护操作。主机侧会重新预热并清除 is_new/valid。
-      @n 传感器清洁 0x80 应通过 run_sensor_clean() 启动，不要反复调用。
       @return 成功 True，失败 False
     '''
 
@@ -113,16 +112,6 @@ python3 examples/polling_read_data/polling_read_data.py
       @n 主机将 rh 转为 code = (rh / 100) * 255，写入 0-255 湿度码。
       @n 未调用本函数时，默认补偿值为 50.0 %RH。
       @return 成功 True，失败 False
-    '''
-
-  def run_sensor_clean(self, timeout_ms)
-    '''!
-      @brief 执行传感器热清洁：启动清洁并轮询完成状态
-      @param timeout_ms 超时毫秒，建议 >= 90000（清洁约 60 s）
-      @return CLEAN_OK=0 清洁完成 / CLEAN_DONE=1 已清洁过 / CLEAN_TIMEOUT=2 超时 / CLEAN_FAIL=3 通讯失败
-      @n 整个生命周期建议只清洁一次。
-      @n 写入 SGX_MODE_SENSOR_CLEAN（0x80），轮询模式：0x80 仍在清洁，0x00 清洁完毕。
-      @n 若未观察到清洁过程且模式已是 Suspend，返回 CLEAN_DONE。
     '''
 
   def get_operation_mode(self)
@@ -139,7 +128,7 @@ python3 examples/polling_read_data/polling_read_data.py
       @n 调用 get_all_gas_data() / get_single_gas_data() 前必须先调用本函数。
       @n IAQ/ULP：IAQ = raw/10，TVOC = raw/100 mg/m3，ETOH = raw/100 ppm，ECO2 = raw ppm，RELIAQ = raw/10
       @n PBAQ：TVOC = raw/1000 mg/m3，ETOH = raw/1000 ppm；IAQ、ECO2、RELIAQ 为 NAN
-      @n Suspend 和传感器清洁模式没有测量数据，返回 False。
+      @n Suspend 模式没有测量数据，返回 False。
       @n is_new 由样本计数器字节决定。valid 仅在预热完成后为 true。
     '''
 

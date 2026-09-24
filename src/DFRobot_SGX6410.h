@@ -48,10 +48,6 @@
 #define SGX_CMD_READ_DEBUG           0x31    ///< Read debug data
 #define SGX_CMD_RESET                0x8F    ///< Reset module; no response
 
-#define CLEAN_OK                     0       ///< Cleaning completed
-#define CLEAN_DONE                   1       ///< Cleaning was already performed
-#define CLEAN_TIMEOUT                2       ///< Cleaning timed out
-#define CLEAN_FAIL                   3       ///< Cleaning communication failure
 
 #define SGX_FDL_IDLE                0x30    ///< Idle; ready to receive request
 #define SGX_FDL_OK                  0x00    ///< Command finished without problems
@@ -74,7 +70,6 @@ public:
     SGX_MODE_IAQ          = 0x01,    /**< IAQ 2nd generation mode, poll about every 3 s, warm-up 5 min */
     SGX_MODE_ULP          = 0x02,    /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
     SGX_MODE_PBAQ         = 0x05,    /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
-    SGX_MODE_SENSOR_CLEAN = 0x80     /**< Thermal clean, once in lifetime */
   } sSGXMode_t;
 
   /**
@@ -143,7 +138,6 @@ public:
    * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
    * @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
-   * @n Sensor cleaning 0x80 should be started with runSensorClean(), not called repeatedly.
    * @return bool
    * @retval true  Setting successful
    * @retval false Setting failed
@@ -163,18 +157,6 @@ public:
   bool setHumidityCompensate(float rh);
 
   /**
-   * @fn runSensorClean
-   * @brief Run the sensor thermal-clean sequence: start clean, then poll until done
-   * @param timeoutMs Timeout in ms, recommend >= 90000 (clean takes about 60 s)
-   * @return uint8_t CLEAN_OK=0 finished / CLEAN_DONE=1 already cleaned / CLEAN_TIMEOUT=2 timeout / CLEAN_FAIL=3 comm error
-   * @warning Interrupting clean can permanently damage the sensing material. Keep power stable.
-   * @n The sensor should be cleaned only once in its lifetime.
-   * @n Writes SGX_MODE_SENSOR_CLEAN (0x80) and polls the mode register: 0x80 still cleaning, 0x00 finished.
-   * @n If the mode is already Suspend without observing clean, returns CLEAN_DONE.
-   */
-  uint8_t runSensorClean(uint32_t timeoutMs);
-
-  /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
    * @return uint8_t Current mode command byte
@@ -192,7 +174,7 @@ public:
    * @n Call this before getAllGasData() / getSingleGasData().
    * @n IAQ/ULP: IAQ = raw/10, TVOC = raw/100 mg/m3, ETOH = raw/100 ppm, ECO2 = raw ppm, RELIAQ = raw/10
    * @n PBAQ: TVOC = raw/1000 mg/m3, ETOH = raw/1000 ppm; IAQ, ECO2 and RELIAQ are NAN
-   * @n Suspend and sensor-clean modes have no measurement payload and return false.
+   * @n Suspend mode has no measurement payload and return false.
    * @n isNew follows the sample-counter byte. valid is true only after mode warm-up.
    */
   bool update(void);
