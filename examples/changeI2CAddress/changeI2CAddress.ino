@@ -12,8 +12,10 @@
  */
 #include "DFRobot_SGX6410.h"
 
-const uint8_t OLD_I2C_ADDRESS = 0x39;
-const uint8_t NEW_I2C_ADDRESS = 0x38;
+// Default is 0x38. Set OLD to the address currently answering on the bus.
+// Set NEW to the address to persist (bits 6:0, 0x00-0x7F).
+const uint8_t OLD_I2C_ADDRESS = 0x38;  // Factory address
+const uint8_t NEW_I2C_ADDRESS = 0x39;  // Example target address
 
 /* >> 1. Choose one communication method below. */
 // #define SGX6410_COMM_UART
@@ -46,6 +48,13 @@ const uint8_t NEW_I2C_ADDRESS = 0x38;
 
   
 #elif defined(SGX6410_COMM_I2C)
+/* ---------------------------------------------------------------------------------------------------------
+ *   SGX6410  |      MCU       | Leonardo/Mega2560/M0 | UNO | ESP8266 | ESP32 | Other Wire boards
+ *     VCC    |      3.3V      |        3.3V           | 3.3V|   3.3V  | 3.3V  |        3.3V
+ *     GND    |      GND       |        GND            | GND |   GND   | GND   |        GND
+ *     SCL    |      SCL       |        SCL            | SCL |  GPIO5  | SCL   |        SCL
+ *     SDA    |      SDA       |        SDA            | SDA |  GPIO4  | SDA   |        SDA
+ * --------------------------------------------------------------------------------------------------------- */
   DFRobot_SGX6410_I2C sgx6410(&Wire, OLD_I2C_ADDRESS);
 #else
   #error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"

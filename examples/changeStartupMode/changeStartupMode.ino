@@ -43,6 +43,13 @@ const uint8_t STARTUP_MODE = SGX_MODE_IAQ;
     DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
   #endif
 #elif defined(SGX6410_COMM_I2C)
+/* ---------------------------------------------------------------------------------------------------------
+ *   SGX6410  |      MCU       | Leonardo/Mega2560/M0 | UNO | ESP8266 | ESP32 | Other Wire boards
+ *     VCC    |      3.3V      |        3.3V           | 3.3V|   3.3V  | 3.3V  |        3.3V
+ *     GND    |      GND       |        GND            | GND |   GND   | GND   |        GND
+ *     SCL    |      SCL       |        SCL            | SCL |  GPIO5  | SCL   |        SCL
+ *     SDA    |      SDA       |        SDA            | SDA |  GPIO4  | SDA   |        SDA
+ * --------------------------------------------------------------------------------------------------------- */
   DFRobot_SGX6410_I2C sgx6410(&Wire, SGX_I2C_ADDR);
 #else
   #error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"

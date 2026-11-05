@@ -61,7 +61,7 @@ bool DFRobot_SGX6410::begin(void) {
   if (!getTrackingNumber(tracking)) return false;
   uint8_t mode = SGX_MODE_SUSPEND;
   if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &mode, 1)) return false;   // Get the current operation mode.
-  _mode = (sSGXMode_t)mode;
+  _mode = (eSGXMode_t)mode;
   // Only these three modes will have a preheating timer.
   _modeTimerValid = mode == SGX_MODE_IAQ || mode == SGX_MODE_ULP || mode == SGX_MODE_PBAQ;
   // Start the preheating timer.
@@ -82,7 +82,7 @@ bool DFRobot_SGX6410::getProductID(uint16_t &productId, uint8_t firmwareVer[3]) 
   return true;
 }
 
-bool DFRobot_SGX6410::setOperationMode(sSGXMode_t mode) {
+bool DFRobot_SGX6410::setOperationMode(eSGXMode_t mode) {
   if (mode != SGX_MODE_SUSPEND && mode != SGX_MODE_IAQ &&
       mode != SGX_MODE_ULP && mode != SGX_MODE_PBAQ) return false;
   uint8_t value = (uint8_t)mode;
@@ -103,10 +103,10 @@ bool DFRobot_SGX6410::setHumidityCompensate(float rh) {
   return writeCmd(SGX_CMD_SET_HUMIDITY, &code, 1);
 }
 
-sSGXMode_t DFRobot_SGX6410::getOperationMode(void) {
+eSGXMode_t DFRobot_SGX6410::getOperationMode(void) {
   uint8_t value = SGX_MODE_NONE;
   if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &value, 1)) return SGX_MODE_NONE;
-  _mode = (sSGXMode_t)value;
+  _mode = (eSGXMode_t)value;
   return _mode;
 }
 
@@ -162,7 +162,7 @@ bool DFRobot_SGX6410::update(void) {
   return true;
 }
 
-float DFRobot_SGX6410::getSingleGasData(sSGXDataType_t dataType) {
+float DFRobot_SGX6410::getSingleGasData(eSGXDataType_t dataType) {
   switch (dataType) {
     case SGX_DATA_IAQ: return _gasData.IAQ;
     case SGX_DATA_TVOC: return _gasData.TVOC;

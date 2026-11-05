@@ -1,8 +1,8 @@
 /*!
  * @file DFRobot_SGX6410.h
- * @brief Define basic struct of DFRobot_SGX6410 class
- * @details Header for DFRobot_SGX6410: class declaration, protocol constants, enums and structs.
- * @n The host talks to the SGX6410 over I2C or UART using the same command frame.
+ * @brief Arduino driver for the SGX6410 MEMS air quality sensor (SEN0771)
+ * @details Declares I2C/UART transports, command helpers, operation-mode enums,
+ * @n cached gas measurement struct, and public APIs for mode, humidity and Flash Shadow.
  * @copyright Copyright (c) 2026 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license The MIT License (MIT)
  * @author PLELES(li.jia@dfrobot.com)
@@ -55,7 +55,7 @@
 #define SGX_FDL_PARAMETER_ERROR     0x05    ///< Parameter error
 
 /**
- * @enum sSGXMode_t
+ * @enum eSGXMode_t
  * @brief SGX6410 operation mode
  * @n Line values match the sensor command bytes.
  */
@@ -65,10 +65,10 @@ typedef enum {
   SGX_MODE_ULP          = 0x02,    /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
   SGX_MODE_PBAQ         = 0x05,    /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
   SGX_MODE_NONE         = 0xFF,    /**< Failed to read the operation mode */
-} sSGXMode_t;
+} eSGXMode_t;
 
 /**
- * @enum sSGXDataType_t
+ * @enum eSGXDataType_t
  * @brief Select one cached gas value
  */
 typedef enum {
@@ -77,7 +77,7 @@ typedef enum {
   SGX_DATA_ETOH   = 2,    /**< Ethanol equivalent */
   SGX_DATA_ECO2   = 3,    /**< Estimated CO2 */
   SGX_DATA_RELIAQ = 4     /**< Relative IAQ */
-} sSGXDataType_t;
+} eSGXDataType_t;
 
 /**
  * @struct sSGXData_t
@@ -129,7 +129,7 @@ public:
   /**
    * @fn setOperationMode
    * @brief Set SGX6410 operation mode
-   * @param mode Operation mode (see sSGXMode_t)
+   * @param mode Operation mode (see eSGXMode_t)
    * @n SGX_MODE_SUSPEND: Suspend mode
    * @n SGX_MODE_IAQ: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
    * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
@@ -139,7 +139,7 @@ public:
    * @retval true  Setting successful
    * @retval false Invalid mode or setting failed
    */
-  bool setOperationMode(sSGXMode_t mode);
+  bool setOperationMode(eSGXMode_t mode);
 
   /**
    * @fn setHumidityCompensate
@@ -156,9 +156,9 @@ public:
   /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
-   * @return sSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
+   * @return eSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
    */
-  sSGXMode_t getOperationMode(void);
+  eSGXMode_t getOperationMode(void);
 
   /**
    * @fn update
@@ -185,7 +185,7 @@ public:
   /**
    * @fn getSingleGasData
    * @brief Return one value from the cached measurement
-   * @param dataType Gas value selected by sSGXDataType_t
+   * @param dataType Gas value selected by eSGXDataType_t
    * @n SGX_DATA_IAQ: IAQ
    * @n SGX_DATA_TVOC: TVOC
    * @n SGX_DATA_ETOH: ETOH
@@ -194,7 +194,7 @@ public:
    * @return float Cached value, or NAN if unsupported in the current mode
    * @n Must call update() first.
    */
-  float getSingleGasData(sSGXDataType_t dataType);
+  float getSingleGasData(eSGXDataType_t dataType);
 
   /**
    * @fn getTrackingNumber
@@ -294,7 +294,8 @@ protected:
   bool writeCmd(uint8_t cmd, const uint8_t *data, size_t size);
   bool readCmd(uint8_t cmd, uint8_t *data, size_t size);
   bool parseMeasurement(const uint8_t *values, size_t size, sSGXData_t &data);
-  sSGXMode_t _mode;
+private:
+  eSGXMode_t _mode;
   sSGXData_t _gasData;
   // Last sample counter returned by Get Measurement Results. It is not part
   // of sSGXData_t, but is used to reject repeated measurement frames.

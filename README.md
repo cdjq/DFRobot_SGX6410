@@ -7,7 +7,7 @@ The host talks to the SGX6410 over I2C or UART using the same command frame, not
 
 Typical workflow: call `begin()` to verify product ID `0x2310` and the 6-byte tracking number, set an operation mode (IAQ / ULP / PBAQ / Suspend), wait until warm-up completes (`valid` is true), then call `update()` and read the cached gas data. Humidity can be written manually as 0–100 %RH.
 
-## Product Link
+## Product Link ([https://www.dfrobot.com](https://www.dfrobot.com))
 
 ```
 SKU: SEN0771
@@ -15,6 +15,7 @@ SKU: SEN0771
 
 ## Table of Contents
 
+  * [Product Link](#product-link-httpswwwdfrobotcom)
   * [Summary](#summary)
   * [Installation](#installation)
   * [Methods](#methods)
@@ -127,7 +128,7 @@ SKU: SEN0771
   /**
    * @fn setOperationMode
    * @brief Set SGX6410 operation mode
-   * @param mode Operation mode (see sSGXMode_t)
+   * @param mode Operation mode (see eSGXMode_t)
    * @n SGX_MODE_SUSPEND: Suspend mode
    * @n SGX_MODE_IAQ: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
    * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
@@ -137,7 +138,7 @@ SKU: SEN0771
    * @retval true  Setting successful
    * @retval false Setting failed
    */
-  bool setOperationMode(sSGXMode_t mode);
+  bool setOperationMode(eSGXMode_t mode);
 
   /**
    * @fn setHumidityCompensate
@@ -154,9 +155,9 @@ SKU: SEN0771
   /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
-   * @return sSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
+   * @return eSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
    */
-  sSGXMode_t getOperationMode(void);
+  eSGXMode_t getOperationMode(void);
 
   /**
    * @fn update
@@ -183,7 +184,7 @@ SKU: SEN0771
   /**
    * @fn getSingleGasData
    * @brief Return one value from the cached measurement
-   * @param dataType Gas value selected by sSGXDataType_t
+   * @param dataType Gas value selected by eSGXDataType_t
    * @n SGX_DATA_IAQ: IAQ
    * @n SGX_DATA_TVOC: TVOC
    * @n SGX_DATA_ETOH: ETOH
@@ -192,7 +193,7 @@ SKU: SEN0771
    * @return float Cached value, or NAN if unsupported in the current mode
    * @n Must call update() first.
    */
-  float getSingleGasData(sSGXDataType_t dataType);
+  float getSingleGasData(eSGXDataType_t dataType);
 
   /**
    * @fn getTrackingNumber

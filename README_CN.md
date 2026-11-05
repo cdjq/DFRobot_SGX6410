@@ -7,7 +7,7 @@ DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器的 Arduino 库。传感�
 
 典型流程：调用 `begin()` 校验产品 ID `0x2310` 并读取 6 字节序列号，设置工作模式（IAQ / ULP / PBAQ / Suspend），等待预热完成（`valid` 为 true），再调用 `update()` 读取缓存的气体数据。湿度可按 0–100 %RH 手动写入。
 
-## 产品链接
+## 产品链接 ([https://www.dfrobot.com.cn](https://www.dfrobot.com.cn))
 
 ```
 SKU: SEN0771
@@ -15,6 +15,7 @@ SKU: SEN0771
 
 ## 目录
 
+  * [产品链接](#产品链接-httpswwwdfrobotcomcn)
   * [概述](#概述)
   * [库安装](#库安装)
   * [方法](#方法)
@@ -127,7 +128,7 @@ SKU: SEN0771
   /**
    * @fn setOperationMode
    * @brief 设置 SGX6410 工作模式
-   * @param mode 工作模式（见 sSGXMode_t）
+   * @param mode 工作模式（见 eSGXMode_t）
    * @n SGX_MODE_SUSPEND: 休眠模式
    * @n SGX_MODE_IAQ: IAQ 第二代，采样周期约 3 s，预热 5 min
    * @n SGX_MODE_ULP: 超低功耗，采样周期约 90 s，预热 15 min
@@ -137,7 +138,7 @@ SKU: SEN0771
    * @retval true  设置成功
    * @retval false 设置失败
    */
-  bool setOperationMode(sSGXMode_t mode);
+  bool setOperationMode(eSGXMode_t mode);
 
   /**
    * @fn setHumidityCompensate
@@ -154,9 +155,9 @@ SKU: SEN0771
   /**
    * @fn getOperationMode
    * @brief 读取当前 SGX6410 工作模式
-   * @return sSGXMode_t 当前工作模式，读取失败时返回 SGX_MODE_NONE（0xFF）
+   * @return eSGXMode_t 当前工作模式，读取失败时返回 SGX_MODE_NONE（0xFF）
    */
-  sSGXMode_t getOperationMode(void);
+  eSGXMode_t getOperationMode(void);
 
   /**
    * @fn update
@@ -183,7 +184,7 @@ SKU: SEN0771
   /**
    * @fn getSingleGasData
    * @brief 从缓存中返回单个气体值
-   * @param dataType 由 sSGXDataType_t 选择的气体类型
+   * @param dataType 由 eSGXDataType_t 选择的气体类型
    * @n SGX_DATA_IAQ: IAQ
    * @n SGX_DATA_TVOC: TVOC
    * @n SGX_DATA_ETOH: ETOH
@@ -192,7 +193,7 @@ SKU: SEN0771
    * @return float 缓存值；当前模式不支持时为 NAN
    * @n 须先调用 update()。
    */
-  float getSingleGasData(sSGXDataType_t dataType);
+  float getSingleGasData(eSGXDataType_t dataType);
 
   /**
    * @fn getTrackingNumber
