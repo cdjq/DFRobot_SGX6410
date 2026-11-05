@@ -1,14 +1,22 @@
-/**
- * @file  GPIOControl.ino
- * @brief Demonstrate configuring and controlling SGX6410 GPIO1.
+/*!
+ * @file setHumidityCompensate.ino
+ * @brief 设置相对湿度补偿，并打印接口调用结果。
+ * @details 将 HUMIDITY_RH 修改为实际环境相对湿度（0.0-100.0 %RH）。
+ * @n Open the serial monitor at 115200 baud. Compensation is sent every 5 seconds.
+ * @n Set HUMIDITY_RH to 101.0f to demonstrate an invalid-value failure.
+ * @n Restore a value in range to demonstrate a successful write with the sensor connected.
+ * @n Success means the command was written; this API does not read back the setting.
  * @copyright Copyright (c) 2026 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license The MIT License (MIT)
  * @author [PLELES](li.jia@dfrobot.com)
  * @version V1.0.0
- * @date 2026-09-03
+ * @date 2026-11-04
  * @url https://github.com/cdjq/DFRobot_SGX6410
  */
 #include "DFRobot_SGX6410.h"
+
+// Relative humidity for compensation, unit: %RH, valid range: 0.0-100.0.
+#define HUMIDITY_RH 50.0f
 
 /* >> 1. Choose one communication method below. */
 #define SGX6410_COMM_UART
@@ -44,54 +52,28 @@
   #error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"
 #endif
 
-static void printGPIOValue() {
-  uint8_t value = 0;
-  if (!sgx6410.getGPIO(value)) {
-    Serial.println("Failed to read GPIO value");
-    return;
-  }
-
-  // GPIO1 is bit 0 of the returned pin-value byte.
-  Serial.print("GPIO1: ");
-  Serial.println((value & 0x01) ? "HIGH" : "LOW");
-}
-
 void setup() {
-  // Open the debug serial port
   Serial.begin(115200);
-  Serial.println("=== GPIO Control Demo ===");
+  delay(1000);
+  Serial.println("=== Set Humidity Compensation Demo ===");
 
-  // Initialize the sensor and verify product ID 0x2310
   while (!sgx6410.begin()) {
-    Serial.println("SGX6410 init fail!");
+    Serial.println("SGX6410 initialization failed. Check the connection.");
+    delay(1000);
   }
-  Serial.println("SGX6410 init success!");
-
-  // configGPIO(0x01) configures GPIO1 as an output
-  if (!sgx6410.configGPIO(0x01)) {
-    Serial.println("Failed to configure GPIO1 as output");
-  } else {
-    Serial.println("GPIO1 configured as output");
-  }
+  Serial.println("SGX6410 initialization successful.");
 }
 
 void loop() {
-  // Toggle GPIO1 high, then low, and print bit0
-  if (!sgx6410.setGPIO()) {
-    Serial.println("Failed to set GPIO1; check the SGX6410 connection");
-    delay(1000);
-    return;
-  }
-  Serial.println("Set GPIO1");
-  printGPIOValue();
-  delay(1000);
+  Serial.print("Compensation humidity: ");
+  Serial.print(HUMIDITY_RH, 1);
+  Serial.println(" %RH");
 
-  if (!sgx6410.clearGPIO()) {
-    Serial.println("Failed to clear GPIO1; check the SGX6410 connection");
-    delay(1000);
-    return;
+  if (sgx6410.setHumidityCompensate(HUMIDITY_RH)) {
+    Serial.println("Humidity compensation setting successful.");
+  } else {
+    Serial.println("Humidity compensation setting failed: invalid humidity or command write failed.");
   }
-  Serial.println("Clear GPIO1");
-  printGPIOValue();
-  delay(1000);
+  Serial.println("--------------------");
+  delay(5000);
 }

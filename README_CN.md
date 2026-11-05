@@ -30,7 +30,7 @@ SKU: SEN0771
 * `update()` 按模式换算：IAQ/ULP 为 IAQ=raw/10、TVOC=raw/100 mg/m³、ETOH=raw/100 ppm、eCO2=raw ppm、RelIAQ=raw/10；PBAQ 仅输出 TVOC/ETOH（raw/1000），其余为 NAN
 * 使用读数前用 `isNew` 判断是否新样本，用 `valid` 判断预热是否完成
 * 手动湿度补偿：写入 0–100 %RH（内部存为 0–255 码）
-* 支持 GPIO1 方向/电平、Flash Shadow 中的 I2C 地址与启动模式
+* 支持 Flash Shadow 中的 I2C 地址与启动模式
 
 ## 库安装
 
@@ -154,11 +154,9 @@ SKU: SEN0771
   /**
    * @fn getOperationMode
    * @brief 读取当前 SGX6410 工作模式
-   * @return uint8_t 当前模式命令字节
-   * @n 读取失败时返回 SGX_MODE_SUSPEND（0x00）。
-   * @n 返回 0x00 一定表示 Suspend，不用于区分通信异常。
+   * @return sSGXMode_t 当前工作模式，读取失败时返回 SGX_MODE_NONE（0xFF）
    */
-  uint8_t getOperationMode(void);
+  sSGXMode_t getOperationMode(void);
 
   /**
    * @fn update
@@ -205,49 +203,6 @@ SKU: SEN0771
    * @retval false 空指针或读取失败
    */
   bool getTrackingNumber(uint8_t *number);
-
-  /**
-   * @fn configGPIO
-   * @brief 配置 GPIO1 方向
-   * @param config 0x00 为输入，0x01 为输出
-   * @n 当前实现只配置 GPIO1。其它值返回 false，且不发送命令。
-   * @n 通用位定义：bit0=GPIO1、bit1=GPIO2、bit2=GPIO3、bit3=GPIO4；0=输入、1=输出；bit4-bit7 忽略。
-   * @return bool
-   * @retval true  命令被接受
-   * @retval false 非法配置或写入失败
-   */
-  bool configGPIO(uint8_t config);
-
-  /**
-   * @fn getGPIO
-   * @brief 读取 GPIO 引脚电平
-   * @param value 输出位域
-   * @n bit0=GPIO1、bit1=GPIO2、bit2=GPIO3、bit3=GPIO4；bit4-bit7 始终为 0。
-   * @return bool
-   * @retval true  读取成功
-   * @retval false 读取失败
-   */
-  bool getGPIO(uint8_t &value);
-
-  /**
-   * @fn setGPIO
-   * @brief 将 GPIO1 置高
-   * @return bool
-   * @retval true  命令被接受
-   * @retval false 写入失败
-   * @n payload 固定为 0x01，仅操作 GPIO1。
-   */
-  bool setGPIO();
-
-  /**
-   * @fn clearGPIO
-   * @brief 将 GPIO1 置低
-   * @return bool
-   * @retval true  命令被接受
-   * @retval false 写入失败
-   * @n payload 固定为 0x01，仅操作 GPIO1。
-   */
-  bool clearGPIO();
 
   /**
    * @fn readFlash

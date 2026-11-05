@@ -26,10 +26,6 @@ update                  KEYWORD2
 getAllGasData           KEYWORD2
 getSingleGasData        KEYWORD2
 getTrackingNumber       KEYWORD2
-configGPIO              KEYWORD2
-getGPIO                 KEYWORD2
-setGPIO                 KEYWORD2
-clearGPIO               KEYWORD2
 readFlash               KEYWORD2
 writeFlash              KEYWORD2
 saveFlash               KEYWORD2
@@ -43,6 +39,7 @@ isDataValid             KEYWORD2
 #######################################
 
 SGX_I2C_ADDR            LITERAL1
+SGX_MODE_NONE           LITERAL1
 SGX_UART_BAUDRATE       LITERAL1
 SGX_UART_SYNC_BYTE      LITERAL1
 SGX_TIMEOUT_MS           LITERAL1
@@ -55,10 +52,6 @@ SGX_CMD_GET_OPERATION_MODE LITERAL1
 SGX_CMD_SET_OPERATION_MODE LITERAL1
 SGX_CMD_SET_HUMIDITY    LITERAL1
 SGX_CMD_GET_MEASUREMENT LITERAL1
-SGX_CMD_CONFIG_GPIO     LITERAL1
-SGX_CMD_GET_GPIO        LITERAL1
-SGX_CMD_SET_GPIO        LITERAL1
-SGX_CMD_CLEAR_GPIO      LITERAL1
 SGX_CMD_READ_FLASH      LITERAL1
 SGX_CMD_WRITE_FLASH     LITERAL1
 SGX_CMD_SAVE_FLASH      LITERAL1

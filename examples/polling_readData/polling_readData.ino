@@ -58,16 +58,17 @@ void setup() {
 
 
   // IAQ: about 3 s sample period, 5 min warm-up
-  if (!sgx6410.setOperationMode(DFRobot_SGX6410::SGX_MODE_IAQ)) {
+  if (!sgx6410.setOperationMode(SGX_MODE_IAQ)) {
     Serial.println("Failed to set IAQ mode!");
   }
+  Serial.println("IAQ mode set success!");
   delay(100);
 }
 
 void loop() {
   // update() reads the measurement frame and scales it
   if (sgx6410.update()) {
-    const DFRobot_SGX6410::sSGXData_t &data = sgx6410.getAllGasData();
+    const sSGXData_t &data = sgx6410.getAllGasData();
     // Skip if the sample counter has not changed
     if (!data.isNew) {
       delay(500);

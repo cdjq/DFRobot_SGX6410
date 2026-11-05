@@ -24,13 +24,13 @@ SKU: SEN0771
 
 ## 概述
 
-* 双接口：I2C（`SMBus`，默认地址 `0x38`）或 UART 命令帧（`/dev/ttyAMA0`，9600 8N1）
+* 双接口：I2C（`smbus2` 原始 I2C 事务，默认地址 `0x38`）或 UART 命令帧（`/dev/ttyAMA0`，9600 8N1）
 * `begin()` 校验产品 ID `0x2310` 并读取 6 字节序列号
 * 工作模式：Suspend；IAQ（约 3 s 采样，预热约 5 min）；ULP（约 90 s 采样，预热约 15 min）；PBAQ（约 5 s 采样，预热约 5 min）
 * `update()` 按模式换算：IAQ/ULP 为 IAQ=raw/10、TVOC=raw/100 mg/m³、ETOH=raw/100 ppm、eCO2=raw ppm、RelIAQ=raw/10；PBAQ 仅输出 TVOC/ETOH（raw/1000），其余为 NAN
 * 使用数据前请检查 `is_new`（是否新样本）和 `valid`（预热是否完成）
 * 手动湿度补偿：写入 0–100 %RH（内部存为 0–255 码）
-* 支持 GPIO1 方向/电平、Flash Shadow 中的 I2C 地址与启动模式
+* 支持 Flash Shadow 中的 I2C 地址与启动模式
 
 ## 库安装
 
@@ -39,7 +39,7 @@ SKU: SEN0771
 
 ```
 sudo apt-get update
-sudo apt-get install python3-smbus python3-serial
+sudo apt-get install python3-smbus2 python3-serial
 ```
 
 3. 把本目录 `python/raspberrypi/` 拷到树莓派，然后运行示例：
@@ -118,7 +118,7 @@ python3 examples/polling_read_data/polling_read_data.py
     '''!
       @brief 读取当前 SGX6410 工作模式
       @return 当前模式命令字节
-      @n 读取失败时返回 SGX_MODE_SUSPEND（0x00）。
+      @n 读取失败时返回 SGX_MODE_NONE（0xFF）。
     '''
 
   def update(self)
@@ -151,35 +151,6 @@ python3 examples/polling_read_data/polling_read_data.py
     '''!
       @brief 读取 6 字节 SGX6410 序列号
       @return 成功返回 6 字节 bytes，失败返回 None
-    '''
-
-  def config_gpio(self, config)
-    '''!
-      @brief 配置 GPIO1 方向
-      @param config 0x00 为输入，0x01 为输出
-      @n 当前实现只配置 GPIO1。其它值返回 False，且不发送命令。
-      @return 成功 True，失败 False
-    '''
-
-  def get_gpio(self)
-    '''!
-      @brief 读取 GPIO 引脚电平
-      @return 成功返回位域，失败返回 None
-      @n bit0=GPIO1、bit1=GPIO2、bit2=GPIO3、bit3=GPIO4；bit4-bit7 始终为 0。
-    '''
-
-  def set_gpio(self)
-    '''!
-      @brief 将 GPIO1 置高
-      @return 成功 True，失败 False
-      @n payload 固定为 0x01，仅操作 GPIO1。
-    '''
-
-  def clear_gpio(self)
-    '''!
-      @brief 将 GPIO1 置低
-      @return 成功 True，失败 False
-      @n payload 固定为 0x01，仅操作 GPIO1。
     '''
 
   def read_flash(self, address)

@@ -30,7 +30,7 @@ SKU: SEN0771
 * `update()` scales the measurement frame: IAQ/ULP use IAQ=raw/10, TVOC=raw/100 mg/m³, ETOH=raw/100 ppm, eCO2=raw ppm, RelIAQ=raw/10; PBAQ only reports TVOC/ETOH (raw/1000), other fields are NAN
 * Check `isNew` for a fresh sample and `valid` for warm-up completion before using the readings
 * Manual humidity compensation: write 0–100 %RH (stored as code 0–255)
-* GPIO1 direction/level, Flash Shadow I2C address and startup mode
+* Flash Shadow I2C address and startup mode
 
 ## Installation
 
@@ -154,11 +154,9 @@ SKU: SEN0771
   /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
-   * @return uint8_t Current mode command byte
-   * @n Returns SGX_MODE_SUSPEND (0x00) when the read fails.
-   * @n A returned 0x00 always means Suspend; it is not used to distinguish a communication error.
+   * @return sSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
    */
-  uint8_t getOperationMode(void);
+  sSGXMode_t getOperationMode(void);
 
   /**
    * @fn update
@@ -205,49 +203,6 @@ SKU: SEN0771
    * @retval false Invalid pointer or read failed
    */
   bool getTrackingNumber(uint8_t *number);
-
-  /**
-   * @fn configGPIO
-   * @brief Configure GPIO1 direction
-   * @param config 0x00 for input or 0x01 for output
-   * @n This implementation only configures GPIO1. Other values return false and send no command.
-   * @n Generic bit map: bit0=GPIO1, bit1=GPIO2, bit2=GPIO3, bit3=GPIO4; 0=input, 1=output; bits 4-7 ignored.
-   * @return bool
-   * @retval true  Command accepted
-   * @retval false Invalid config or write failed
-   */
-  bool configGPIO(uint8_t config);
-
-  /**
-   * @fn getGPIO
-   * @brief Read GPIO pin values
-   * @param value Output bit field
-   * @n bit0=GPIO1, bit1=GPIO2, bit2=GPIO3, bit3=GPIO4; bits 4-7 are always 0.
-   * @return bool
-   * @retval true  Read successful
-   * @retval false Read failed
-   */
-  bool getGPIO(uint8_t &value);
-
-  /**
-   * @fn setGPIO
-   * @brief Set GPIO1 high
-   * @return bool
-   * @retval true  Command accepted
-   * @retval false Write failed
-   * @n Payload is fixed 0x01 and operates GPIO1 only.
-   */
-  bool setGPIO();
-
-  /**
-   * @fn clearGPIO
-   * @brief Set GPIO1 low
-   * @return bool
-   * @retval true  Command accepted
-   * @retval false Write failed
-   * @n Payload is fixed 0x01 and operates GPIO1 only.
-   */
-  bool clearGPIO();
 
   /**
    * @fn readFlash

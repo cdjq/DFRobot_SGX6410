@@ -15,9 +15,10 @@ import struct
 import time
 
 try:
-  import smbus
+  from smbus2 import SMBus, i2c_msg
 except ImportError:
-  smbus = None
+  SMBus = None
+  i2c_msg = None
 
 try:
   import serial
@@ -41,10 +42,6 @@ SGX_CMD_GET_OPERATION_MODE = 0x10
 SGX_CMD_SET_OPERATION_MODE = 0x11
 SGX_CMD_SET_HUMIDITY = 0x12
 SGX_CMD_GET_MEASUREMENT = 0x18
-SGX_CMD_CONFIG_GPIO = 0x20
-SGX_CMD_GET_GPIO = 0x21
-SGX_CMD_SET_GPIO = 0x22
-SGX_CMD_CLEAR_GPIO = 0x23
 SGX_CMD_READ_DEBUG = 0x31
 SGX_CMD_READ_FLASH = 0x40
 SGX_CMD_WRITE_FLASH = 0x41
@@ -85,6 +82,7 @@ class DFRobot_SGX6410(object):
   SGX_MODE_IAQ = 0x01
   SGX_MODE_ULP = 0x02
   SGX_MODE_PBAQ = 0x05
+  SGX_MODE_NONE = 0xFF
   SGX_DATA_IAQ = 0
   SGX_DATA_TVOC = 1
   SGX_DATA_ETOH = 2
@@ -201,11 +199,11 @@ class DFRobot_SGX6410(object):
     '''!
       @brief Read the current SGX6410 operation mode
       @return Current mode command byte
-      @n Returns SGX_MODE_SUSPEND (0x00) when the read fails.
+      @n Returns SGX_MODE_NONE (0xFF) when the read fails.
     '''
     response = self._read_cmd(SGX_CMD_GET_OPERATION_MODE, 1)
     if response is None:
-      return self.SGX_MODE_SUSPEND
+      return self.SGX_MODE_NONE
     self._mode = response[0]
     return response[0]
 
@@ -274,40 +272,6 @@ class DFRobot_SGX6410(object):
     '''
     response = self._read_cmd(SGX_CMD_GET_TRACKING_NUMBER, 6)
     return bytes(response) if response is not None else None
-
-  def config_gpio(self, config):
-    '''!
-      @brief Configure GPIO1 direction
-      @param config 0x00 for input or 0x01 for output
-      @n This implementation only configures GPIO1. Other values return False and send no command.
-      @return True on success, False on failure
-    '''
-    return config in (0, 1) and self._write_cmd(SGX_CMD_CONFIG_GPIO, [config])
-
-  def get_gpio(self):
-    '''!
-      @brief Read GPIO pin values
-      @return Bit field on success, None on failure
-      @n bit0=GPIO1, bit1=GPIO2, bit2=GPIO3, bit3=GPIO4; bits 4-7 are always 0.
-    '''
-    response = self._read_cmd(SGX_CMD_GET_GPIO, 1)
-    return response[0] if response is not None else None
-
-  def set_gpio(self):
-    '''!
-      @brief Set GPIO1 high
-      @return True on success, False on failure
-      @n Payload is fixed 0x01 and operates GPIO1 only.
-    '''
-    return self._write_cmd(SGX_CMD_SET_GPIO, [0x01])
-
-  def clear_gpio(self):
-    '''!
-      @brief Set GPIO1 low
-      @return True on success, False on failure
-      @n Payload is fixed 0x01 and operates GPIO1 only.
-    '''
-    return self._write_cmd(SGX_CMD_CLEAR_GPIO, [0x01])
 
   def read_flash(self, address):
     '''!
@@ -403,21 +367,26 @@ class DFRobot_SGX6410_I2C(DFRobot_SGX6410):
       @param addr 7-bit I2C address, default 0x38
     '''
     DFRobot_SGX6410.__init__(self)
-    if smbus is None:
-      raise ImportError('Install python3-smbus to use I2C mode')
+    if SMBus is None:
+      raise ImportError('Install python3-smbus2 to use I2C mode')
     self._addr = addr
-    self.i2cbus = smbus.SMBus(bus)
+    self.i2cbus = SMBus(bus)
 
   def _write_transport(self, data):
     try:
-      self.i2cbus.write_i2c_block_data(self._addr, data[0], data[1:])
+      # Send the complete command frame without an SMBus register or count byte.
+      message = i2c_msg.write(self._addr, data)
+      self.i2cbus.i2c_rdwr(message)
       return True
     except Exception:
       return False
 
   def _read_transport(self, length):
     try:
-      return self.i2cbus.read_i2c_block_data(self._addr, 0, length)
+      # Read the response directly; do not send an extra register byte.
+      message = i2c_msg.read(self._addr, length)
+      self.i2cbus.i2c_rdwr(message)
+      return list(message)
     except Exception:
       return None
 

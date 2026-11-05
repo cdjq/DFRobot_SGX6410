@@ -38,10 +38,6 @@
 #define SGX_CMD_SET_OPERATION_MODE   0x11    ///< Set operation mode
 #define SGX_CMD_SET_HUMIDITY         0x12    ///< Set humidity compensation
 #define SGX_CMD_GET_MEASUREMENT      0x18    ///< Get measurement results
-#define SGX_CMD_CONFIG_GPIO          0x20    ///< Configure GPIO direction
-#define SGX_CMD_GET_GPIO             0x21    ///< Get GPIO pin values
-#define SGX_CMD_SET_GPIO             0x22    ///< Set GPIO1
-#define SGX_CMD_CLEAR_GPIO           0x23    ///< Clear GPIO1
 #define SGX_CMD_READ_FLASH           0x40    ///< Read Flash Shadow byte
 #define SGX_CMD_WRITE_FLASH          0x41    ///< Write Flash Shadow byte
 #define SGX_CMD_SAVE_FLASH           0x42    ///< Write Flash and return FDL status
@@ -58,46 +54,47 @@
 #define SGX_FDL_WRITE_ERROR         0x1C    ///< Write error
 #define SGX_FDL_PARAMETER_ERROR     0x05    ///< Parameter error
 
+/**
+ * @enum sSGXMode_t
+ * @brief SGX6410 operation mode
+ * @n Line values match the sensor command bytes.
+ */
+typedef enum {
+  SGX_MODE_SUSPEND      = 0x00,    /**< Suspend mode */
+  SGX_MODE_IAQ          = 0x01,    /**< IAQ 2nd generation mode, poll about every 3 s, warm-up 5 min */
+  SGX_MODE_ULP          = 0x02,    /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
+  SGX_MODE_PBAQ         = 0x05,    /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
+  SGX_MODE_NONE         = 0xFF,    /**< Failed to read the operation mode */
+} sSGXMode_t;
+
+/**
+ * @enum sSGXDataType_t
+ * @brief Select one cached gas value
+ */
+typedef enum {
+  SGX_DATA_IAQ    = 0,    /**< IAQ, UBA level */
+  SGX_DATA_TVOC   = 1,    /**< TVOC */
+  SGX_DATA_ETOH   = 2,    /**< Ethanol equivalent */
+  SGX_DATA_ECO2   = 3,    /**< Estimated CO2 */
+  SGX_DATA_RELIAQ = 4     /**< Relative IAQ */
+} sSGXDataType_t;
+
+/**
+ * @struct sSGXData_t
+ * @brief Parsed and cached gas measurement data
+ */
+typedef struct {
+  float IAQ;     /**< IAQ, UBA level; NAN in PBAQ or Suspend */
+  float TVOC;    /**< TVOC, mg/m3 */
+  float ETOH;    /**< Ethanol equivalent, ppm */
+  float ECO2;    /**< Estimated CO2, ppm; NAN in PBAQ or Suspend */
+  float RELIAQ;  /**< Relative IAQ; NAN in PBAQ or Suspend */
+  bool  isNew;   /**< True when the latest frame has a new sample counter */
+  bool  valid;   /**< True when the sample was acquired after mode warm-up */
+} sSGXData_t;
+
 class DFRobot_SGX6410 {
 public:
-  /**
-   * @enum sSGXMode_t
-   * @brief SGX6410 operation mode
-   * @n Line values match the sensor command bytes.
-   */
-  typedef enum {
-    SGX_MODE_SUSPEND      = 0x00,    /**< Suspend mode */
-    SGX_MODE_IAQ          = 0x01,    /**< IAQ 2nd generation mode, poll about every 3 s, warm-up 5 min */
-    SGX_MODE_ULP          = 0x02,    /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
-    SGX_MODE_PBAQ         = 0x05,    /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
-  } sSGXMode_t;
-
-  /**
-   * @enum sSGXDataType_t
-   * @brief Select one cached gas value
-   */
-  typedef enum {
-    SGX_DATA_IAQ    = 0,    /**< IAQ, UBA level */
-    SGX_DATA_TVOC   = 1,    /**< TVOC */
-    SGX_DATA_ETOH   = 2,    /**< Ethanol equivalent */
-    SGX_DATA_ECO2   = 3,    /**< Estimated CO2 */
-    SGX_DATA_RELIAQ = 4     /**< Relative IAQ */
-  } sSGXDataType_t;
-
-  /**
-   * @struct sSGXData_t
-   * @brief Parsed and cached gas measurement data
-   */
-  typedef struct {
-    float IAQ;     /**< IAQ, UBA level; NAN in PBAQ or Suspend */
-    float TVOC;    /**< TVOC, mg/m3 */
-    float ETOH;    /**< Ethanol equivalent, ppm */
-    float ECO2;    /**< Estimated CO2, ppm; NAN in PBAQ or Suspend */
-    float RELIAQ;  /**< Relative IAQ; NAN in PBAQ or Suspend */
-    bool  isNew;   /**< True when the latest frame has a new sample counter */
-    bool  valid;   /**< True when the sample was acquired after mode warm-up */
-  } sSGXData_t;
-
   /**
    * @fn DFRobot_SGX6410
    * @brief Constructor
@@ -140,7 +137,7 @@ public:
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
    * @return bool
    * @retval true  Setting successful
-   * @retval false Setting failed
+   * @retval false Invalid mode or setting failed
    */
   bool setOperationMode(sSGXMode_t mode);
 
@@ -159,11 +156,9 @@ public:
   /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
-   * @return uint8_t Current mode command byte
-   * @n Returns SGX_MODE_SUSPEND (0x00) when the read fails.
-   * @n A returned 0x00 always means Suspend; it is not used to distinguish a communication error.
+   * @return sSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
    */
-  uint8_t getOperationMode(void);
+  sSGXMode_t getOperationMode(void);
 
   /**
    * @fn update
@@ -210,49 +205,6 @@ public:
    * @retval false Invalid pointer or read failed
    */
   bool getTrackingNumber(uint8_t *number);
-
-  /**
-   * @fn configGPIO
-   * @brief Configure GPIO1 direction
-   * @param config 0x00 for input or 0x01 for output
-   * @n This implementation only configures GPIO1. Other values return false and send no command.
-   * @n Generic bit map: bit0=GPIO1, bit1=GPIO2, bit2=GPIO3, bit3=GPIO4; 0=input, 1=output; bits 4-7 ignored.
-   * @return bool
-   * @retval true  Command accepted
-   * @retval false Invalid config or write failed
-   */
-  bool configGPIO(uint8_t config);
-
-  /**
-   * @fn getGPIO
-   * @brief Read GPIO pin values
-   * @param value Output bit field
-   * @n bit0=GPIO1, bit1=GPIO2, bit2=GPIO3, bit3=GPIO4; bits 4-7 are always 0.
-   * @return bool
-   * @retval true  Read successful
-   * @retval false Read failed
-   */
-  bool getGPIO(uint8_t &value);
-
-  /**
-   * @fn setGPIO
-   * @brief Set GPIO1 high
-   * @return bool
-   * @retval true  Command accepted
-   * @retval false Write failed
-   * @n Payload is fixed 0x01 and operates GPIO1 only.
-   */
-  bool setGPIO();
-
-  /**
-   * @fn clearGPIO
-   * @brief Set GPIO1 low
-   * @return bool
-   * @retval true  Command accepted
-   * @retval false Write failed
-   * @n Payload is fixed 0x01 and operates GPIO1 only.
-   */
-  bool clearGPIO();
 
   /**
    * @fn readFlash

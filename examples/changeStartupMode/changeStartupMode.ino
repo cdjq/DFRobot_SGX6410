@@ -12,7 +12,7 @@
  */
 #include "DFRobot_SGX6410.h"
 
-const uint8_t STARTUP_MODE = DFRobot_SGX6410::SGX_MODE_IAQ;
+const uint8_t STARTUP_MODE = SGX_MODE_IAQ;
 
 /* >> 1. Choose one communication method below. */
 #define SGX6410_COMM_UART
@@ -50,10 +50,10 @@ const uint8_t STARTUP_MODE = DFRobot_SGX6410::SGX_MODE_IAQ;
 
 const char* getModeName(uint8_t mode) {
   switch (mode) {
-    case DFRobot_SGX6410::SGX_MODE_SUSPEND:     return "SUSPEND";
-    case DFRobot_SGX6410::SGX_MODE_IAQ:         return "IAQ";
-    case DFRobot_SGX6410::SGX_MODE_ULP:         return "ULP";
-    case DFRobot_SGX6410::SGX_MODE_PBAQ:        return "PBAQ";
+    case SGX_MODE_SUSPEND:     return "SUSPEND";
+    case SGX_MODE_IAQ:         return "IAQ";
+    case SGX_MODE_ULP:         return "ULP";
+    case SGX_MODE_PBAQ:        return "PBAQ";
     default: return "UNKNOWN";
   }
 }

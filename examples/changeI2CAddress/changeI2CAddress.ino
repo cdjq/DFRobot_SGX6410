@@ -16,8 +16,8 @@ const uint8_t OLD_I2C_ADDRESS = 0x39;
 const uint8_t NEW_I2C_ADDRESS = 0x38;
 
 /* >> 1. Choose one communication method below. */
-#define SGX6410_COMM_UART
-// #define SGX6410_COMM_I2C
+// #define SGX6410_COMM_UART
+#define SGX6410_COMM_I2C
 
 #if defined(SGX6410_COMM_UART)
 /* ---------------------------------------------------------------------------------------------------------

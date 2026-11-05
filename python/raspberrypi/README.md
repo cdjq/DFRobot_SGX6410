@@ -24,13 +24,13 @@ SKU: SEN0771
 
 ## Summary
 
-* Dual interface: I2C (`SMBus`, default address `0x38`) or UART command frames (`/dev/ttyAMA0`, 9600 8N1)
+* Dual interface: I2C (`smbus2` raw I2C, default address `0x38`) or UART command frames (`/dev/ttyAMA0`, 9600 8N1)
 * `begin()` verifies product ID `0x2310` and reads the 6-byte tracking number
 * Operation modes: Suspend; IAQ (~3 s sample, ~5 min warm-up); ULP (~90 s sample, ~15 min warm-up); PBAQ (~5 s sample, ~5 min warm-up)
 * `update()` scales the measurement frame: IAQ/ULP use IAQ=raw/10, TVOC=raw/100 mg/m³, ETOH=raw/100 ppm, eCO2=raw ppm, RelIAQ=raw/10; PBAQ only reports TVOC/ETOH (raw/1000), other fields are NAN
 * Check `is_new` for a fresh sample and `valid` for warm-up completion before using the readings
 * Manual humidity compensation: write 0–100 %RH (stored as code 0–255)
-* GPIO1 direction/level, Flash Shadow I2C address and startup mode
+* Flash Shadow I2C address and startup mode
 
 ## Installation
 
@@ -39,7 +39,7 @@ SKU: SEN0771
 
 ```
 sudo apt-get update
-sudo apt-get install python3-smbus python3-serial
+sudo apt-get install python3-smbus2 python3-serial
 ```
 
 3. Copy this `python/raspberrypi/` folder onto the Pi, then run an example:
@@ -118,7 +118,7 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
     '''!
       @brief Read the current SGX6410 operation mode
       @return Current mode command byte
-      @n Returns SGX_MODE_SUSPEND (0x00) when the read fails.
+      @n Returns SGX_MODE_NONE (0xFF) when the read fails.
     '''
 
   def update(self)
@@ -151,35 +151,6 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
     '''!
       @brief Read the six-byte SGX6410 tracking number
       @return Six-byte bytes on success, None on failure
-    '''
-
-  def config_gpio(self, config)
-    '''!
-      @brief Configure GPIO1 direction
-      @param config 0x00 for input or 0x01 for output
-      @n This implementation only configures GPIO1. Other values return False and send no command.
-      @return True on success, False on failure
-    '''
-
-  def get_gpio(self)
-    '''!
-      @brief Read GPIO pin values
-      @return Bit field on success, None on failure
-      @n bit0=GPIO1, bit1=GPIO2, bit2=GPIO3, bit3=GPIO4; bits 4-7 are always 0.
-    '''
-
-  def set_gpio(self)
-    '''!
-      @brief Set GPIO1 high
-      @return True on success, False on failure
-      @n Payload is fixed 0x01 and operates GPIO1 only.
-    '''
-
-  def clear_gpio(self)
-    '''!
-      @brief Set GPIO1 low
-      @return True on success, False on failure
-      @n Payload is fixed 0x01 and operates GPIO1 only.
     '''
 
   def read_flash(self, address)

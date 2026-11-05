@@ -83,6 +83,8 @@ bool DFRobot_SGX6410::getProductID(uint16_t &productId, uint8_t firmwareVer[3]) 
 }
 
 bool DFRobot_SGX6410::setOperationMode(sSGXMode_t mode) {
+  if (mode != SGX_MODE_SUSPEND && mode != SGX_MODE_IAQ &&
+      mode != SGX_MODE_ULP && mode != SGX_MODE_PBAQ) return false;
   uint8_t value = (uint8_t)mode;
   if (!writeCmd(SGX_CMD_SET_OPERATION_MODE, &value, 1)) return false;
   _mode = mode;
@@ -101,11 +103,11 @@ bool DFRobot_SGX6410::setHumidityCompensate(float rh) {
   return writeCmd(SGX_CMD_SET_HUMIDITY, &code, 1);
 }
 
-uint8_t DFRobot_SGX6410::getOperationMode(void) {
-  uint8_t value = SGX_MODE_SUSPEND;
-  if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &value, 1)) return SGX_MODE_SUSPEND;
+sSGXMode_t DFRobot_SGX6410::getOperationMode(void) {
+  uint8_t value = SGX_MODE_NONE;
+  if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &value, 1)) return SGX_MODE_NONE;
   _mode = (sSGXMode_t)value;
-  return value;
+  return _mode;
 }
 
 bool DFRobot_SGX6410::parseMeasurement(const uint8_t *values, size_t size, sSGXData_t &data) {
@@ -173,25 +175,6 @@ float DFRobot_SGX6410::getSingleGasData(sSGXDataType_t dataType) {
 
 bool DFRobot_SGX6410::getTrackingNumber(uint8_t *number) {
   return readCmd(SGX_CMD_GET_TRACKING_NUMBER, number, 6);
-}
-
-bool DFRobot_SGX6410::configGPIO(uint8_t config) {
-  if (config > 1) return false;
-  return writeCmd(SGX_CMD_CONFIG_GPIO, &config, 1);
-}
-
-bool DFRobot_SGX6410::getGPIO(uint8_t &value) {
-  return readCmd(SGX_CMD_GET_GPIO, &value, 1);
-}
-
-bool DFRobot_SGX6410::setGPIO() {
-  uint8_t value = 0x01;
-  return writeCmd(SGX_CMD_SET_GPIO, &value, 1);
-}
-
-bool DFRobot_SGX6410::clearGPIO() {
-  uint8_t value = 0x01;
-  return writeCmd(SGX_CMD_CLEAR_GPIO, &value, 1);
 }
 
 bool DFRobot_SGX6410::readFlash(uint8_t address, uint8_t &data) {
