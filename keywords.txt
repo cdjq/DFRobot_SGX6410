@@ -27,6 +27,7 @@ getAllGasData           KEYWORD2
 getSingleGasData        KEYWORD2
 getTrackingNumber       KEYWORD2
 readFlash               KEYWORD2
+setI2CAddress           KEYWORD2
 writeFlash              KEYWORD2
 saveFlash               KEYWORD2
 readDebugData           KEYWORD2
@@ -65,6 +66,7 @@ SGX_FDL_ERASE_ERROR     LITERAL1
 SGX_FDL_BLANK_CHECK_ERROR LITERAL1
 SGX_FDL_WRITE_ERROR     LITERAL1
 SGX_FDL_PARAMETER_ERROR LITERAL1
+SGX_COMM_ERROR          LITERAL1
 SGX_MODE_SUSPEND               LITERAL1
 SGX_MODE_IAQ                   LITERAL1
 SGX_MODE_ULP                   LITERAL1

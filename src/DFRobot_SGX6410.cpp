@@ -53,12 +53,6 @@ bool DFRobot_SGX6410::readCmd(uint8_t cmd, uint8_t *data, size_t size) {
 }
 
 bool DFRobot_SGX6410::begin(void) {
-  uint16_t id = 0;
-  uint8_t version[3] = {0, 0, 0};
-  uint8_t tracking[6] = {0, 0, 0, 0, 0, 0};
-  if (!getProductID(id, version)) return false;
-  if (id != 0x2310) return false;
-  if (!getTrackingNumber(tracking)) return false;
   uint8_t mode = SGX_MODE_SUSPEND;
   if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &mode, 1)) return false;   // Get the current operation mode.
   _mode = (eSGXMode_t)mode;
@@ -82,18 +76,22 @@ bool DFRobot_SGX6410::getProductID(uint16_t &productId, uint8_t firmwareVer[3]) 
   return true;
 }
 
-bool DFRobot_SGX6410::setOperationMode(eSGXMode_t mode) {
+uint8_t DFRobot_SGX6410::setOperationMode(eSGXMode_t mode, bool save) {
   if (mode != SGX_MODE_SUSPEND && mode != SGX_MODE_IAQ &&
-      mode != SGX_MODE_ULP && mode != SGX_MODE_PBAQ) return false;
+      mode != SGX_MODE_ULP && mode != SGX_MODE_PBAQ) return SGX_FDL_PARAMETER_ERROR;
   uint8_t value = (uint8_t)mode;
-  if (!writeCmd(SGX_CMD_SET_OPERATION_MODE, &value, 1)) return false;
+  if (!writeCmd(SGX_CMD_SET_OPERATION_MODE, &value, 1)) return SGX_COMM_ERROR;
   _mode = mode;
   _sampleCounterNew = false;
   _modeTimerValid = mode == SGX_MODE_IAQ || mode == SGX_MODE_ULP || mode == SGX_MODE_PBAQ;
   _modeStartTime = millis();
   _gasData.isNew = false;
   _gasData.valid = false;
-  return true;
+  if (!save) return SGX_FDL_OK;
+  if (!writeFlash(SGX_STARTUP_MODE_SHADOW_ADDR, value)) return SGX_COMM_ERROR;
+  uint8_t status = SGX_FDL_PARAMETER_ERROR;
+  if (!saveFlash(status)) return SGX_COMM_ERROR;
+  return status;
 }
 
 bool DFRobot_SGX6410::setHumidityCompensate(float rh) {
@@ -174,6 +172,7 @@ float DFRobot_SGX6410::getSingleGasData(eSGXDataType_t dataType) {
 }
 
 bool DFRobot_SGX6410::getTrackingNumber(uint8_t *number) {
+  if (number == nullptr) return false;
   return readCmd(SGX_CMD_GET_TRACKING_NUMBER, number, 6);
 }
 
@@ -187,6 +186,15 @@ bool DFRobot_SGX6410::readFlash(uint8_t address, uint8_t &data) {
   if (response[0] != 0 || sgxChecksum(response, 2) != response[2]) return false;
   data = response[1];
   return true;
+}
+
+uint8_t DFRobot_SGX6410::setI2CAddress(uint8_t address, bool save) {
+  if (address > 0x7F) return SGX_FDL_PARAMETER_ERROR;
+  if (!writeFlash(SGX_I2C_ADDRESS_SHADOW_ADDR, address)) return SGX_COMM_ERROR;
+  if (!save) return SGX_FDL_OK;
+  uint8_t status = SGX_FDL_PARAMETER_ERROR;
+  if (!saveFlash(status)) return SGX_COMM_ERROR;
+  return status;
 }
 
 bool DFRobot_SGX6410::writeFlash(uint8_t address, uint8_t data) {
@@ -269,8 +277,8 @@ DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(SoftwareSerial *sSerial,
 #else
 DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(HardwareSerial *hSerial,
                                            uint32_t baud,
-                                           uint8_t rxPin,
-                                           uint8_t txPin)
+                                           int8_t rxPin,
+                                           int8_t txPin)
     : _serial(hSerial), _baud(baud), _rxPin(rxPin), _txPin(txPin) {
 }
 #endif

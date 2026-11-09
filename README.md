@@ -5,7 +5,7 @@ DFRobot_SGX6410 is the Arduino library for the SGX6410 MEMS air quality sensor (
 
 The host talks to the SGX6410 over I2C or UART using the same command frame, not a Gravity bridge register map. I2C uses a 7-bit slave address in bits 6:0 (default `0x38`); bit 7 of the programmable address byte is don't care. UART defaults to 9600 8N1.
 
-Typical workflow: call `begin()` to verify product ID `0x2310` and the 6-byte tracking number, set an operation mode (IAQ / ULP / PBAQ / Suspend), wait until warm-up completes (`valid` is true), then call `update()` and read the cached gas data. Humidity can be written manually as 0–100 %RH.
+Typical workflow: call `begin()` to read the current operation mode and initialize the warm-up timer, set an operation mode (IAQ / ULP / PBAQ / Suspend), wait until warm-up completes (`valid` is true), then call `update()` and read the cached gas data. Humidity can be written manually as 0–100 %RH.
 
 ## Product Link ([https://www.dfrobot.com](https://www.dfrobot.com))
 
@@ -26,7 +26,7 @@ SKU: SEN0771
 ## Summary
 
 * Dual interface: I2C (7-bit slave address in bits 6:0, default `0x38`; bit 7 = don't care) or UART command frames, 9600 8N1
-* `begin()` verifies product ID `0x2310` and reads the 6-byte tracking number
+* `begin()` reads the current operation mode and initializes the warm-up timer
 * Operation modes: Suspend; IAQ (~3 s sample, ~5 min warm-up); ULP (~90 s sample, ~15 min warm-up); PBAQ (~5 s sample, ~5 min warm-up)
 * `update()` scales the measurement frame: IAQ/ULP use IAQ=raw/10, TVOC=raw/100 mg/m³, ETOH=raw/100 ppm, eCO2=raw ppm, RelIAQ=raw/10; PBAQ only reports TVOC/ETOH (raw/1000), other fields are NAN
 * Check `isNew` for a fresh sample and `valid` for warm-up completion before using the readings
@@ -55,15 +55,15 @@ SKU: SEN0771
    * @brief Constructor (HardwareSerial)
    * @param hSerial HardwareSerial object pointer, typically &Serial1
    * @param baud Baud rate, default 9600
-   * @param rxPin RX pin, default 38
-   * @param txPin TX pin, default 37
+   * @param rxPin RX pin, -1 keeps the current assignment or uses the core default
+   * @param txPin TX pin, -1 keeps the current assignment or uses the core default
    * @n Default line settings are 9600 8N1.
-   * @n ESP32: pass rxPin/txPin to remap Serial1, or omit them to use the constructor defaults.
+   * @n ESP32: pass rxPin/txPin to remap Serial1, or omit them to keep the current pin assignments or use the core defaults.
    */
   DFRobot_SGX6410_UART(HardwareSerial *hSerial,
                        uint32_t baud = SGX_UART_BAUDRATE,
-                       uint8_t rxPin = 38,
-                       uint8_t txPin = 37);
+                       int8_t rxPin = -1,
+                       int8_t txPin = -1);
 
   /**
    * @fn begin
@@ -96,7 +96,7 @@ SKU: SEN0771
    * @return bool
    * @retval true  Initialization successful
    * @retval false Initialization failed
-   * @n Calls TwoWire::begin() on the injected bus, then the base begin() product-ID check.
+   * @n Calls TwoWire::begin() on the injected bus, then the base begin() operation-mode read.
    * @n On ESP32/ESP8266, custom SCL/SDA from the constructor are applied here. UNO always uses the default Wire pins.
    */
   bool begin(void);
@@ -107,9 +107,7 @@ SKU: SEN0771
    * @return bool
    * @retval true  Initialization successful
    * @retval false Initialization failed
-   * @n Reads product ID (expected 0x2310) and the six-byte tracking number.
-   * @n Both reads must succeed before the sensor is treated as online.
-   * @n Then reads the current operation mode and starts the host-side warm-up timer.
+   * @n Reads the current operation mode and starts the host-side warm-up timer.
    */
   bool begin(void);
 
@@ -134,11 +132,14 @@ SKU: SEN0771
    * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
    * @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
-   * @return bool
-   * @retval true  Setting successful
-   * @retval false Setting failed
+   * @param save Save this mode as the startup mode and commit all Flash Shadow settings, default false
+   * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid mode,
+   * @n SGX_COMM_ERROR on communication failure, or the FDL status from saveFlash().
+   * @n The current mode changes immediately. No automatic reset.
+   * @n With save=false, success only means the mode command was sent.
+   * @n If saving fails, the current mode has already changed.
    */
-  bool setOperationMode(eSGXMode_t mode);
+  uint8_t setOperationMode(eSGXMode_t mode, bool save = false);
 
   /**
    * @fn setHumidityCompensate
@@ -219,6 +220,19 @@ SKU: SEN0771
    * @n Other addresses are rejected on the host and send no command.
    */
   bool readFlash(uint8_t address, uint8_t &data);
+
+  /**
+   * @fn setI2CAddress
+   * @brief Set the I2C slave address in Flash Shadow and optionally save to Flash
+   * @param address 7-bit slave address, 0x00-0x7F; other values send no command
+   * @param save Whether to commit all Flash Shadow settings to Flash, default false
+   * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid address,
+   * @n SGX_COMM_ERROR on communication failure, or the FDL status from saveFlash().
+   * @n With save=false, success only means the Shadow write command was sent.
+   * @n The address takes effect after saving and resetting the sensor. No automatic reset.
+   * @n After reset, recreate the I2C object with the new address.
+   */
+  uint8_t setI2CAddress(uint8_t address, bool save = false);
 
   /**
    * @fn writeFlash

@@ -21,6 +21,7 @@
 #include <SoftwareSerial.h>
 #endif
 
+#define SGX_PRODUCT_ID               0x2310  ///< Expected SGX6410 product ID
 #define SGX_TIMEOUT_MS               100     ///< Command response timeout in ms
 #define SGX_I2C_ADDR                 0x38    ///< Default 7-bit I2C slave address (bits 6:0)
 #define SGX_UART_BAUDRATE            9600    ///< Default UART baud rate
@@ -53,6 +54,7 @@
 #define SGX_FDL_BLANK_CHECK_ERROR   0x1B    ///< Blank check or verify margin violated
 #define SGX_FDL_WRITE_ERROR         0x1C    ///< Write error
 #define SGX_FDL_PARAMETER_ERROR     0x05    ///< Parameter error
+#define SGX_COMM_ERROR              0xFE    ///< Host-side communication failure (not an FDL status)
 
 /**
  * @enum eSGXMode_t
@@ -108,9 +110,7 @@ public:
    * @return bool
    * @retval true  Initialization successful
    * @retval false Initialization failed
-   * @n Reads product ID (expected 0x2310) and the six-byte tracking number.
-   * @n Both reads must succeed before the sensor is treated as online.
-   * @n Then reads the current operation mode and starts the host-side warm-up timer.
+   * @n Reads the current operation mode and starts the host-side warm-up timer.
    */
   virtual bool begin(void);
 
@@ -135,11 +135,14 @@ public:
    * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
    * @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
-   * @return bool
-   * @retval true  Setting successful
-   * @retval false Invalid mode or setting failed
+   * @param save Save this mode as the startup mode and commit all Flash Shadow settings, default false
+   * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid mode,
+   * @n SGX_COMM_ERROR on communication failure, or the FDL status from saveFlash().
+   * @n The current mode changes immediately. No automatic reset.
+   * @n With save=false, success only means the mode command was sent.
+   * @n If saving fails, the current mode has already changed.
    */
-  bool setOperationMode(eSGXMode_t mode);
+  uint8_t setOperationMode(eSGXMode_t mode, bool save = false);
 
   /**
    * @fn setHumidityCompensate
@@ -220,6 +223,19 @@ public:
    * @n Other addresses are rejected on the host and send no command.
    */
   bool readFlash(uint8_t address, uint8_t &data);
+
+  /**
+   * @fn setI2CAddress
+   * @brief Set the I2C slave address in Flash Shadow and optionally save to Flash
+   * @param address 7-bit slave address, 0x00-0x7F; other values send no command
+   * @param save Whether to commit all Flash Shadow settings to Flash, default false
+   * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid address,
+   * @n SGX_COMM_ERROR on communication failure, or the FDL status from saveFlash().
+   * @n With save=false, success only means the Shadow write command was sent.
+   * @n The address takes effect after saving and resetting the sensor. No automatic reset.
+   * @n After reset, recreate the I2C object with the new address.
+   */
+  uint8_t setI2CAddress(uint8_t address, bool save = false);
 
   /**
    * @fn writeFlash
@@ -326,7 +342,7 @@ public:
    * @return bool
    * @retval true  Initialization successful
    * @retval false Initialization failed
-   * @n Calls TwoWire::begin() on the injected bus, then the base begin() product-ID check.
+   * @n Calls TwoWire::begin() on the injected bus, then the base begin() operation-mode read.
    * @n On ESP32/ESP8266, custom SCL/SDA from the constructor are applied here. UNO always uses the default Wire pins.
    */
   bool begin(void) override;
@@ -357,15 +373,15 @@ public:
    * @brief Constructor (HardwareSerial)
    * @param hSerial HardwareSerial object pointer, typically &Serial1
    * @param baud Baud rate, default 9600
-   * @param rxPin RX pin, default 38
-   * @param txPin TX pin, default 37
+   * @param rxPin RX pin, -1 keeps the current assignment or uses the core default
+   * @param txPin TX pin, -1 keeps the current assignment or uses the core default
    * @n Default line settings are 9600 8N1.
-   * @n ESP32: pass rxPin/txPin to remap Serial1, or omit them to use the constructor defaults.
+   * @n ESP32: pass rxPin/txPin to remap Serial1, or omit them to keep the current pin assignments or use the core defaults.
    */
   DFRobot_SGX6410_UART(HardwareSerial *hSerial,
                        uint32_t baud = SGX_UART_BAUDRATE,
-                       uint8_t rxPin = 38,
-                       uint8_t txPin = 37);
+                       int8_t rxPin = -1,
+                       int8_t txPin = -1);
 #endif
 
   /**
@@ -389,8 +405,8 @@ private:
   HardwareSerial *_serial;
 #endif
   uint32_t _baud;
-  uint8_t _rxPin;
-  uint8_t _txPin;
+  int8_t _rxPin;
+  int8_t _txPin;
 };
 
 #endif

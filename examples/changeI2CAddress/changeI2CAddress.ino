@@ -26,8 +26,8 @@ const uint8_t NEW_I2C_ADDRESS = 0x39;  // Example target address
  *   SGX6410  |      MCU       | Leonardo/Mega2560/M0 | UNO | ESP8266 | ESP32 | Other Serial1 boards
  *     VCC    |      3.3V      |        3.3V           | 3.3V|   3.3V  | 3.3V  |        3.3V
  *     GND    |      GND       |        GND            | GND |   GND   | GND   |        GND
- *      RX    |      TX        |     Serial1 TX1       |  7  |  GPIO5  |  37   |     Serial1 TX
- *      TX    |      RX        |     Serial1 RX1       |  6  |  GPIO4  |  38   |     Serial1 RX
+ *      RX    |      TX        |     Serial1 TX1       |  7  |  GPIO5  |  TX1  |     Serial1 TX
+ *      TX    |      RX        |     Serial1 RX1       |  6  |  GPIO4  |  RX1  |     Serial1 RX
  * --------------------------------------------------------------------------------------------------------- */
   #if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
     #include <SoftwareSerial.h>
@@ -39,9 +39,8 @@ const uint8_t NEW_I2C_ADDRESS = 0x39;  // Example target address
     SoftwareSerial sgxSerial(/*rx =*/4, /*tx =*/5);
     DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
   #elif defined(ESP32)
-    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE, /*rx =*/38, /*tx =*/37);
-  #elif defined(ARDUINO_BBC_MICROBIT) && !defined(ARDUINO_BBC_MICROBIT_V2)
-    #error "BBC micro:bit has no usable UART. Select SGX6410_COMM_I2C."
+    // Use Serial1 default pins; pass RX/TX explicitly to match custom wiring.
+    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
   #else
     DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
   #endif
@@ -78,18 +77,9 @@ void setup() {
   Serial.println("Keep power stable during this process.");
 
   // Write the new address to Flash Shadow, then commit Flash
-  if (!sgx6410.writeFlash(SGX_I2C_ADDRESS_SHADOW_ADDR, NEW_I2C_ADDRESS)) {
-    Serial.println("Failed to write I2C address to Flash Shadow");
-    return;
-  }
-
-  uint8_t status = SGX_FDL_PARAMETER_ERROR;
-  if (!sgx6410.saveFlash(status)) {
-    Serial.println("Failed to receive Flash write status");
-    return;
-  }
+  uint8_t status = sgx6410.setI2CAddress(NEW_I2C_ADDRESS, true);
   if (status != SGX_FDL_OK) {
-    Serial.print("Flash write failed with status: 0x");
+    Serial.print("Address change failed with status: 0x");
     Serial.println(status, HEX);
     return;
   }

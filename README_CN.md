@@ -5,7 +5,7 @@ DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器的 Arduino 库。传感�
 
 主机通过 I2C 或 UART 与 SGX6410 通信，两者使用同一套命令帧。I2C 从机地址在 bit6:0（7 位，默认 `0x38`）；可编程地址字节的 bit7 忽略。UART 默认 9600 8N1。
 
-典型流程：调用 `begin()` 校验产品 ID `0x2310` 并读取 6 字节序列号，设置工作模式（IAQ / ULP / PBAQ / Suspend），等待预热完成（`valid` 为 true），再调用 `update()` 读取缓存的气体数据。湿度可按 0–100 %RH 手动写入。
+典型流程：调用 `begin()` 读取当前工作模式并初始化预热计时，设置工作模式（IAQ / ULP / PBAQ / Suspend），等待预热完成（`valid` 为 true），再调用 `update()` 读取缓存的气体数据。湿度可按 0–100 %RH 手动写入。
 
 ## 产品链接 ([https://www.dfrobot.com.cn](https://www.dfrobot.com.cn))
 
@@ -26,7 +26,7 @@ SKU: SEN0771
 ## 概述
 
 * 双接口：I2C（bit6:0 为 7 位从机地址，默认 `0x38`，bit7 忽略）或 UART 命令帧，9600 8N1
-* `begin()` 校验产品 ID `0x2310` 并读取 6 字节序列号
+* `begin()` 读取当前工作模式并初始化预热计时
 * 工作模式：Suspend；IAQ（约 3 s 采样，预热约 5 min）；ULP（约 90 s 采样，预热约 15 min）；PBAQ（约 5 s 采样，预热约 5 min）
 * `update()` 按模式换算：IAQ/ULP 为 IAQ=raw/10、TVOC=raw/100 mg/m³、ETOH=raw/100 ppm、eCO2=raw ppm、RelIAQ=raw/10；PBAQ 仅输出 TVOC/ETOH（raw/1000），其余为 NAN
 * 使用读数前用 `isNew` 判断是否新样本，用 `valid` 判断预热是否完成
@@ -55,15 +55,15 @@ SKU: SEN0771
    * @brief 构造函数（HardwareSerial）
    * @param hSerial HardwareSerial 对象指针，通常为 &Serial1
    * @param baud 波特率，默认 9600
-   * @param rxPin RX 引脚，默认 38
-   * @param txPin TX 引脚，默认 37
+   * @param rxPin RX 引脚，默认 -1，保留已有配置或使用串口核心默认引脚
+   * @param txPin TX 引脚，默认 -1，保留已有配置或使用串口核心默认引脚
    * @n 默认串口参数为 9600 8N1。
-   * @n ESP32：传入 rxPin/txPin 可改 Serial1 引脚，省略则用构造函数默认脚。
+   * @n ESP32：传入 rxPin/txPin 可改 Serial1 引脚，省略则保留已有引脚配置或使用串口核心默认引脚。
    */
   DFRobot_SGX6410_UART(HardwareSerial *hSerial,
                        uint32_t baud = SGX_UART_BAUDRATE,
-                       uint8_t rxPin = 38,
-                       uint8_t txPin = 37);
+                       int8_t rxPin = -1,
+                       int8_t txPin = -1);
 
   /**
    * @fn begin
@@ -96,7 +96,7 @@ SKU: SEN0771
    * @return bool
    * @retval true  初始化成功
    * @retval false 初始化失败
-   * @n 对注入的总线调用 TwoWire::begin()，再执行基类 begin() 的产品 ID 检查。
+   * @n 对注入的总线调用 TwoWire::begin()，再执行基类 begin() 的工作模式读取。
    * @n ESP32/ESP8266 会在此处应用构造函数里的自定义 SCL/SDA。UNO 始终使用默认 Wire 引脚。
    */
   bool begin(void);
@@ -107,9 +107,7 @@ SKU: SEN0771
    * @return bool
    * @retval true  初始化成功
    * @retval false 初始化失败
-   * @n 读取产品 ID（期望为 0x2310）和 6 字节序列号。
-   * @n 两项读取均成功才认为传感器在线。
-   * @n 然后读取当前工作模式，并启动主机侧预热计时。
+   * @n 读取当前工作模式，并启动主机侧预热计时。
    */
   bool begin(void);
 
@@ -134,11 +132,14 @@ SKU: SEN0771
    * @n SGX_MODE_ULP: 超低功耗，采样周期约 90 s，预热 15 min
    * @n SGX_MODE_PBAQ: PBAQ，采样周期约 5 s，预热 5 min
    * @n 改模式属于维护操作。主机侧会重新预热并清除 isNew/valid。
-   * @return bool
-   * @retval true  设置成功
-   * @retval false 设置失败
+   * @param save 是否将该模式设为启动模式并保存全部 Flash Shadow 设置，默认 false
+   * @return 成功返回 SGX_FDL_OK，模式无效返回 SGX_FDL_PARAMETER_ERROR，
+   * @n 通信失败返回 SGX_COMM_ERROR，否则返回 saveFlash() 收到的 FDL 状态。
+   * @n 当前工作模式立即切换，本接口不自动复位。
+   * @n save=false 时，成功仅表示模式设置命令已发送。
+   * @n 保存失败时，当前工作模式已经切换。
    */
-  bool setOperationMode(eSGXMode_t mode);
+  uint8_t setOperationMode(eSGXMode_t mode, bool save = false);
 
   /**
    * @fn setHumidityCompensate
@@ -219,6 +220,19 @@ SKU: SEN0771
    * @n 其它地址在主机侧拒绝，不发送命令。
    */
   bool readFlash(uint8_t address, uint8_t &data);
+
+  /**
+   * @fn setI2CAddress
+   * @brief 设置 I2C 地址到 Flash Shadow，可选保存到 Flash
+   * @param address 7 位从机地址，范围 0x00-0x7F；超出范围不发送命令
+   * @param save 是否将全部 Flash Shadow 设置保存到 Flash，默认 false
+   * @return 成功返回 SGX_FDL_OK，地址无效返回 SGX_FDL_PARAMETER_ERROR，
+   * @n 通信失败返回 SGX_COMM_ERROR，否则返回 saveFlash() 收到的 FDL 状态。
+   * @n save=false 时，成功仅表示 Shadow 写入命令已发送。
+   * @n 新地址保存并复位后生效，本接口不自动复位。
+   * @n 复位后需使用新地址重新创建 I2C 对象。
+   */
+  uint8_t setI2CAddress(uint8_t address, bool save = false);
 
   /**
    * @fn writeFlash

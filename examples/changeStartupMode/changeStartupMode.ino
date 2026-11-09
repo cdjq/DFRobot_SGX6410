@@ -12,7 +12,7 @@
  */
 #include "DFRobot_SGX6410.h"
 
-const uint8_t STARTUP_MODE = SGX_MODE_IAQ;
+const eSGXMode_t STARTUP_MODE = SGX_MODE_IAQ;
 
 /* >> 1. Choose one communication method below. */
 #define SGX6410_COMM_UART
@@ -23,8 +23,8 @@ const uint8_t STARTUP_MODE = SGX_MODE_IAQ;
  *   SGX6410  |      MCU       | Leonardo/Mega2560/M0 | UNO | ESP8266 | ESP32 | Other Serial1 boards
  *     VCC    |      3.3V      |        3.3V           | 3.3V|   3.3V  | 3.3V  |        3.3V
  *     GND    |      GND       |        GND            | GND |   GND   | GND   |        GND
- *      RX    |      TX        |     Serial1 TX1       |  7  |  GPIO5  |  37   |     Serial1 TX
- *      TX    |      RX        |     Serial1 RX1       |  6  |  GPIO4  |  38   |     Serial1 RX
+ *      RX    |      TX        |     Serial1 TX1       |  7  |  GPIO5  |  TX1  |     Serial1 TX
+ *      TX    |      RX        |     Serial1 RX1       |  6  |  GPIO4  |  RX1  |     Serial1 RX
  * --------------------------------------------------------------------------------------------------------- */
   #if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
     #include <SoftwareSerial.h>
@@ -36,9 +36,8 @@ const uint8_t STARTUP_MODE = SGX_MODE_IAQ;
     SoftwareSerial sgxSerial(/*rx =*/4, /*tx =*/5);
     DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
   #elif defined(ESP32)
-    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE, /*rx =*/38, /*tx =*/37);
-  #elif defined(ARDUINO_BBC_MICROBIT) && !defined(ARDUINO_BBC_MICROBIT_V2)
-    #error "BBC micro:bit has no usable UART. Select SGX6410_COMM_I2C."
+    // Use Serial1 default pins; pass RX/TX explicitly to match custom wiring.
+    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
   #else
     DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
   #endif
@@ -70,7 +69,7 @@ void setup() {
   Serial.begin(115200);
   Serial.println("=== Change Startup Mode Demo ===");
 
-  // Initialize the sensor and verify product ID 0x2310
+  // Initialize the sensor and read the current operation mode
   while (!sgx6410.begin()) {
     Serial.println("SGX6410 init fail!");
   }
@@ -80,19 +79,10 @@ void setup() {
   Serial.println("...");
   Serial.println("Keep power stable during this process.");
 
-  // Write the startup mode to Flash Shadow, then commit Flash
-  if (!sgx6410.writeFlash(SGX_STARTUP_MODE_SHADOW_ADDR, STARTUP_MODE)) {
-    Serial.println("Failed to write startup mode to Flash Shadow");
-    return;
-  }
-
-  uint8_t status = SGX_FDL_PARAMETER_ERROR;
-  if (!sgx6410.saveFlash(status)) {
-    Serial.println("Failed to receive Flash write status");
-    return;
-  }
+  // Change the current mode and persist it as the startup mode
+  uint8_t status = sgx6410.setOperationMode(STARTUP_MODE, true);
   if (status != SGX_FDL_OK) {
-    Serial.print("Flash write failed with status: 0x");
+    Serial.print("Mode change failed with status: 0x");
     Serial.println(status, HEX);
     return;
   }
