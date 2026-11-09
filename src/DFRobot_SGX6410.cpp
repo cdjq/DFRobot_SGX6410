@@ -286,7 +286,11 @@ DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(HardwareSerial *hSerial,
 bool DFRobot_SGX6410_UART::begin(void) {
   if (!_serial) return false;
 #if defined(ESP32)
-  _serial->begin(_baud, SERIAL_8N1, _rxPin, _txPin);
+  if ((_rxPin >= 0) && (_txPin >= 0)) {
+    _serial->begin(_baud, SERIAL_8N1, _rxPin, _txPin);
+  } else {
+    _serial->begin(_baud);
+  }
   delay(100);
 #elif defined(ARDUINO_AVR_UNO) || defined(ESP8266)
   _serial->begin(_baud);
