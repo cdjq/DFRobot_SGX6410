@@ -135,7 +135,7 @@ python3 examples/polling_read_data/polling_read_data.py
   def get_all_gas_data(self)
     '''!
       @brief 返回缓存的气体测量结构
-      @return SGXData 最近一次缓存的测量
+      @return DFRobot_SGX6410_Data 最近一次缓存的测量
       @n 须先调用 update()。用 is_new 判断是否新样本，用 valid 判断预热是否完成。
     '''
 
@@ -175,7 +175,7 @@ python3 examples/polling_read_data/polling_read_data.py
     '''!
       @brief 将 Flash Shadow 区提交到 Flash
       @return 成功返回 FDL 状态字节，失败返回 None
-      @n 常见码：SGX_FDL_OK（0x00）成功，SGX_FDL_BUSY（0xFF）仍在处理。
+      @n 常见码：sgx_fdl_ok（0x00）成功，sgx_fdl_busy（0xFF）仍在处理。
     '''
 
   def read_debug_data(self, size)

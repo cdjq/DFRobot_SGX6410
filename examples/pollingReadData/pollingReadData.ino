@@ -64,7 +64,7 @@ void setup()
   Serial.println("SGX6410 init success!");
 
   // IAQ: about 3 s sample period, 5 min warm-up
-  if (sgx6410.setOperationMode(SGX_MODE_IAQ) != SGX_FDL_OK) {
+  if (sgx6410.setOperationMode(eSgxModeIaq) != SGX_FDL_OK) {
     Serial.println("Failed to set IAQ mode!");
   }
   Serial.println("IAQ mode set success!");
@@ -83,18 +83,18 @@ void loop()
     }
     // Print gas data. valid stays false during datasheet warm-up
     Serial.print("IAQ:      ");
-    Serial.println(data.IAQ, 2);
+    Serial.println(data.iaq, 2);
     Serial.print("TVOC:     ");
-    Serial.print(data.TVOC, 2);
+    Serial.print(data.tvoc, 2);
     Serial.println(" mg/m3");
     Serial.print("ETOH:     ");
-    Serial.print(data.ETOH, 2);
+    Serial.print(data.etoh, 2);
     Serial.println(" ppm");
     Serial.print("ECO2:     ");
-    Serial.print((uint16_t)data.ECO2);
+    Serial.print((uint16_t)data.ecO2);
     Serial.println(" ppm");
     Serial.print("RELIAQ:   ");
-    Serial.println(data.RELIAQ, 2);
+    Serial.println(data.reliaq, 2);
     Serial.print("Data valid: ");
     Serial.println(data.valid ? "YES" : "NO (warming up)");
     Serial.println("--------------------");

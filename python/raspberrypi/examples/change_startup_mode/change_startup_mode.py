@@ -8,16 +8,16 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath
 from DFRobot_SGX6410 import *
 
 # Choose one communication method: uncomment only one line below.
-# SGX6410_COMM_UART = True
-SGX6410_COMM_I2C = True
+# sgx6410_comm_uart = True
+sgx6410_comm_i2c = True
 
-if ('SGX6410_COMM_UART' in globals()) == ('SGX6410_COMM_I2C' in globals()):
-  raise ValueError('Select exactly one of SGX6410_COMM_UART or SGX6410_COMM_I2C')
-STARTUP_MODE = DFRobot_SGX6410.SGX_MODE_IAQ
-if 'SGX6410_COMM_UART' in globals():
-  sgx6410 = DFRobot_SGX6410_UART(SGX_UART_BAUDRATE, SGX_I2C_ADDR)
+if ('sgx6410_comm_uart' in globals()) == ('sgx6410_comm_i2c' in globals()):
+  raise ValueError('Select exactly one of sgx6410_comm_uart or sgx6410_comm_i2c')
+startup_mode = DFRobot_SGX6410.SGX_MODE_IAQ
+if 'sgx6410_comm_uart' in globals():
+  sgx6410 = DFRobot_SGX6410_UART(sgx_uart_baudrate, sgx_i2c_addr)
 else:
-  sgx6410 = DFRobot_SGX6410_I2C(1, SGX_I2C_ADDR)
+  sgx6410 = DFRobot_SGX6410_I2C(1, sgx_i2c_addr)
 
 
 def get_mode_name(mode):
@@ -36,18 +36,18 @@ def setup():
     print('SGX6410 init fail!')
     time.sleep(1)
   print('SGX6410 initialized successfully!')
-  print('Changing startup mode to %s...' % get_mode_name(STARTUP_MODE))
+  print('Changing startup mode to %s...' % get_mode_name(startup_mode))
   print('Keep power stable during this process.')
 
   # Write the startup mode to Flash Shadow, then commit Flash
-  if not sgx6410.write_flash(SGX_STARTUP_MODE_SHADOW_ADDR, STARTUP_MODE):
+  if not sgx6410.write_flash(sgx_startup_mode_shadow_addr, startup_mode):
     print('Failed to write startup mode to Flash Shadow')
     return
   status = sgx6410.save_flash()
   if status is None:
     print('Failed to receive Flash write status')
     return
-  if status != SGX_FDL_OK:
+  if status != sgx_fdl_ok:
     print('Flash write failed with status: 0x%X' % status)
     return
   print('Flash write: OK')
@@ -58,7 +58,7 @@ def setup():
   if not sgx6410.reset():
     print('Failed to reset sensor')
     return
-  print('Sensor will restart with %s mode.' % get_mode_name(STARTUP_MODE))
+  print('Sensor will restart with %s mode.' % get_mode_name(startup_mode))
 
 
 if __name__ == '__main__':

@@ -127,10 +127,10 @@ SKU: SEN0771
    * @fn setOperationMode
    * @brief Set SGX6410 operation mode
    * @param mode Operation mode (see eSGXMode_t)
-   * @n SGX_MODE_SUSPEND: Suspend mode
-   * @n SGX_MODE_IAQ: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
-   * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
-   * @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
+   * @n eSgxModeSuspend: Suspend mode
+   * @n eSgxModeIaq: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
+   * @n eSgxModeUlp: Ultra-low power, about 90 s sample period, 15 min warm-up
+   * @n eSgxModePbaq: PBAQ, about 5 s sample period, 5 min warm-up
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
    * @param save Save this mode as the startup mode and commit all Flash Shadow settings, default false
    * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid mode,
@@ -156,7 +156,7 @@ SKU: SEN0771
   /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
-   * @return eSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
+   * @return eSGXMode_t Current operation mode, or eSgxModeNone (0xFF) if the read fails
    */
   eSGXMode_t getOperationMode(void);
 
@@ -186,11 +186,11 @@ SKU: SEN0771
    * @fn getSingleGasData
    * @brief Return one value from the cached measurement
    * @param dataType Gas value selected by eSGXDataType_t
-   * @n SGX_DATA_IAQ: IAQ
-   * @n SGX_DATA_TVOC: TVOC
-   * @n SGX_DATA_ETOH: ETOH
-   * @n SGX_DATA_ECO2: estimated CO2
-   * @n SGX_DATA_RELIAQ: relative IAQ
+   * @n eSgxDataIaq: IAQ
+   * @n eSgxDataTvoc: TVOC
+   * @n eSgxDataEtoh: ETOH
+   * @n eSgxDataEcO2: estimated CO2
+   * @n eSgxDataReliaq: relative IAQ
    * @return float Cached value, or NAN if unsupported in the current mode
    * @n Must call update() first.
    */

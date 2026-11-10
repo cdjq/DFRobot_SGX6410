@@ -127,10 +127,10 @@ SKU: SEN0771
    * @fn setOperationMode
    * @brief 设置 SGX6410 工作模式
    * @param mode 工作模式（见 eSGXMode_t）
-   * @n SGX_MODE_SUSPEND: 休眠模式
-   * @n SGX_MODE_IAQ: IAQ 第二代，采样周期约 3 s，预热 5 min
-   * @n SGX_MODE_ULP: 超低功耗，采样周期约 90 s，预热 15 min
-   * @n SGX_MODE_PBAQ: PBAQ，采样周期约 5 s，预热 5 min
+   * @n eSgxModeSuspend: 休眠模式
+   * @n eSgxModeIaq: IAQ 第二代，采样周期约 3 s，预热 5 min
+   * @n eSgxModeUlp: 超低功耗，采样周期约 90 s，预热 15 min
+   * @n eSgxModePbaq: PBAQ，采样周期约 5 s，预热 5 min
    * @n 改模式属于维护操作。主机侧会重新预热并清除 isNew/valid。
    * @param save 是否将该模式设为启动模式并保存全部 Flash Shadow 设置，默认 false
    * @return 成功返回 SGX_FDL_OK，模式无效返回 SGX_FDL_PARAMETER_ERROR，
@@ -156,7 +156,7 @@ SKU: SEN0771
   /**
    * @fn getOperationMode
    * @brief 读取当前 SGX6410 工作模式
-   * @return eSGXMode_t 当前工作模式，读取失败时返回 SGX_MODE_NONE（0xFF）
+   * @return eSGXMode_t 当前工作模式，读取失败时返回 eSgxModeNone（0xFF）
    */
   eSGXMode_t getOperationMode(void);
 
@@ -186,11 +186,11 @@ SKU: SEN0771
    * @fn getSingleGasData
    * @brief 从缓存中返回单个气体值
    * @param dataType 由 eSGXDataType_t 选择的气体类型
-   * @n SGX_DATA_IAQ: IAQ
-   * @n SGX_DATA_TVOC: TVOC
-   * @n SGX_DATA_ETOH: ETOH
-   * @n SGX_DATA_ECO2: 估计 CO2
-   * @n SGX_DATA_RELIAQ: 相对 IAQ
+   * @n eSgxDataIaq: IAQ
+   * @n eSgxDataTvoc: TVOC
+   * @n eSgxDataEtoh: ETOH
+   * @n eSgxDataEcO2: 估计 CO2
+   * @n eSgxDataReliaq: 相对 IAQ
    * @return float 缓存值；当前模式不支持时为 NAN
    * @n 须先调用 update()。
    */

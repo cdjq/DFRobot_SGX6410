@@ -40,7 +40,7 @@ isDataValid             KEYWORD2
 #######################################
 
 SGX_I2C_ADDR            LITERAL1
-SGX_MODE_NONE           LITERAL1
+eSgxModeNone           LITERAL1
 SGX_UART_BAUDRATE       LITERAL1
 SGX_UART_SYNC_BYTE      LITERAL1
 SGX_TIMEOUT_MS           LITERAL1
@@ -67,14 +67,14 @@ SGX_FDL_BLANK_CHECK_ERROR LITERAL1
 SGX_FDL_WRITE_ERROR     LITERAL1
 SGX_FDL_PARAMETER_ERROR LITERAL1
 SGX_COMM_ERROR          LITERAL1
-SGX_MODE_SUSPEND               LITERAL1
-SGX_MODE_IAQ                   LITERAL1
-SGX_MODE_ULP                   LITERAL1
-SGX_MODE_PBAQ                  LITERAL1
-SGX_DATA_IAQ                   LITERAL1
-SGX_DATA_TVOC                  LITERAL1
-SGX_DATA_ETOH                  LITERAL1
-SGX_DATA_ECO2                  LITERAL1
-SGX_DATA_RELIAQ                LITERAL1
+eSgxModeSuspend               LITERAL1
+eSgxModeIaq                   LITERAL1
+eSgxModeUlp                   LITERAL1
+eSgxModePbaq                  LITERAL1
+eSgxDataIaq                   LITERAL1
+eSgxDataTvoc                  LITERAL1
+eSgxDataEtoh                  LITERAL1
+eSgxDataEcO2                  LITERAL1
+eSgxDataReliaq                LITERAL1
 SGX_I2C_ADDRESS_SHADOW_ADDR    LITERAL1
 SGX_STARTUP_MODE_SHADOW_ADDR   LITERAL1

@@ -11,7 +11,6 @@
 '''
 
 import math
-import struct
 import time
 
 try:
@@ -26,43 +25,43 @@ except ImportError:
   serial = None
 
 
-SGX_TIMEOUT_MS = 100
-SGX_I2C_ADDR = 0x38
-SGX_UART_BAUDRATE = 9600
-SGX_UART_SYNC_BYTE = 0xFF
-SGX_WARMUP_IAQ_MS = 300000
-SGX_WARMUP_ULP_MS = 900000
-SGX_WARMUP_PBAQ_MS = 300000
-SGX_I2C_ADDRESS_SHADOW_ADDR = 0x00
-SGX_STARTUP_MODE_SHADOW_ADDR = 0x03
+sgx_timeout_ms = 100
+sgx_i2c_addr = 0x38
+sgx_uart_baudrate = 9600
+sgx_uart_sync_byte = 0xFF
+sgx_warmup_iaq_ms = 300000
+sgx_warmup_ulp_ms = 900000
+sgx_warmup_pbaq_ms = 300000
+sgx_i2c_address_shadow_addr = 0x00
+sgx_startup_mode_shadow_addr = 0x03
 
-SGX_CMD_GET_PRODUCT_ID = 0x00
-SGX_CMD_GET_TRACKING_NUMBER = 0x01
-SGX_CMD_GET_OPERATION_MODE = 0x10
-SGX_CMD_SET_OPERATION_MODE = 0x11
-SGX_CMD_SET_HUMIDITY = 0x12
-SGX_CMD_GET_MEASUREMENT = 0x18
-SGX_CMD_READ_DEBUG = 0x31
-SGX_CMD_READ_FLASH = 0x40
-SGX_CMD_WRITE_FLASH = 0x41
-SGX_CMD_SAVE_FLASH = 0x42
-SGX_CMD_RESET = 0x8F
-
-
-SGX_FDL_IDLE = 0x30
-SGX_FDL_OK = 0x00
-SGX_FDL_BUSY = 0xFF
-SGX_FDL_PROTECTION_ERROR = 0x10
-SGX_FDL_ERASE_ERROR = 0x1A
-SGX_FDL_BLANK_CHECK_ERROR = 0x1B
-SGX_FDL_WRITE_ERROR = 0x1C
-SGX_FDL_PARAMETER_ERROR = 0x05
-
-I2C_MODE = 0x01
-UART_MODE = 0x02
+sgx_cmd_get_product_id = 0x00
+sgx_cmd_get_tracking_number = 0x01
+sgx_cmd_get_operation_mode = 0x10
+sgx_cmd_set_operation_mode = 0x11
+sgx_cmd_set_humidity = 0x12
+sgx_cmd_get_measurement = 0x18
+sgx_cmd_read_debug = 0x31
+sgx_cmd_read_flash = 0x40
+sgx_cmd_write_flash = 0x41
+sgx_cmd_save_flash = 0x42
+sgx_cmd_reset = 0x8F
 
 
-class SGXData(object):
+sgx_fdl_idle = 0x30
+sgx_fdl_ok = 0x00
+sgx_fdl_busy = 0xFF
+sgx_fdl_protection_error = 0x10
+sgx_fdl_erase_error = 0x1A
+sgx_fdl_blank_check_error = 0x1B
+sgx_fdl_write_error = 0x1C
+sgx_fdl_parameter_error = 0x05
+
+i2c_mode = 0x01
+uart_mode = 0x02
+
+
+class DFRobot_SGX6410_Data(object):
   '''!
   @brief Parsed and cached gas measurement data
   '''
@@ -91,7 +90,7 @@ class DFRobot_SGX6410(object):
 
   def __init__(self):
     self._mode = self.SGX_MODE_SUSPEND
-    self._gas_data = SGXData()
+    self._gas_data = DFRobot_SGX6410_Data()
     self._sample_counter = 0
     self._sample_counter_new = False
     self._mode_start_time = 0
@@ -136,7 +135,7 @@ class DFRobot_SGX6410(object):
       return False
     if self.get_tracking_number() is None:
       return False
-    mode = self._read_cmd(SGX_CMD_GET_OPERATION_MODE, 1)
+    mode = self._read_cmd(sgx_cmd_get_operation_mode, 1)
     if mode is None:
       return False
     self._mode = mode[0]
@@ -153,7 +152,7 @@ class DFRobot_SGX6410(object):
     @return (product_id, (major, minor, revision)) on success, None on failure
     @n product_id is expected to be 0x2310.
     '''
-    response = self._read_cmd(SGX_CMD_GET_PRODUCT_ID, 5)
+    response = self._read_cmd(sgx_cmd_get_product_id, 5)
     if response is None:
       return None
     product_id = response[0] | (response[1] << 8)
@@ -172,7 +171,7 @@ class DFRobot_SGX6410(object):
     '''
     if mode not in (self.SGX_MODE_SUSPEND, self.SGX_MODE_IAQ, self.SGX_MODE_ULP, self.SGX_MODE_PBAQ):
       return False
-    if not self._write_cmd(SGX_CMD_SET_OPERATION_MODE, [mode]):
+    if not self._write_cmd(sgx_cmd_set_operation_mode, [mode]):
       return False
     self._mode = mode
     self._sample_counter_new = False
@@ -192,7 +191,7 @@ class DFRobot_SGX6410(object):
     '''
     if math.isnan(rh) or rh < 0.0 or rh > 100.0:
       return False
-    return self._write_cmd(SGX_CMD_SET_HUMIDITY, [int((rh / 100.0) * 255.0) & 0xFF])
+    return self._write_cmd(sgx_cmd_set_humidity, [int((rh / 100.0) * 255.0) & 0xFF])
 
   def get_operation_mode(self):
     '''!
@@ -200,7 +199,7 @@ class DFRobot_SGX6410(object):
     @return Current mode command byte
     @n Returns SGX_MODE_NONE (0xFF) when the read fails.
     '''
-    response = self._read_cmd(SGX_CMD_GET_OPERATION_MODE, 1)
+    response = self._read_cmd(sgx_cmd_get_operation_mode, 1)
     if response is None:
       return self.SGX_MODE_NONE
     self._mode = response[0]
@@ -220,7 +219,7 @@ class DFRobot_SGX6410(object):
     if self._mode not in (self.SGX_MODE_IAQ, self.SGX_MODE_ULP, self.SGX_MODE_PBAQ):
       return False
     payload_size = 5 if self._mode == self.SGX_MODE_PBAQ else 9
-    values = self._read_cmd(SGX_CMD_GET_MEASUREMENT, payload_size)
+    values = self._read_cmd(sgx_cmd_get_measurement, payload_size)
     if values is None:
       return False
     sample_counter = values[0]
@@ -238,7 +237,7 @@ class DFRobot_SGX6410(object):
       self._gas_data.reliaq = float('nan')
       self._gas_data.tvoc = (values[1] | (values[2] << 8)) / 1000.0
       self._gas_data.etoh = (values[3] | (values[4] << 8)) / 1000.0
-    warmup = SGX_WARMUP_IAQ_MS if self._mode != self.SGX_MODE_ULP else SGX_WARMUP_ULP_MS
+    warmup = sgx_warmup_iaq_ms if self._mode != self.SGX_MODE_ULP else sgx_warmup_ulp_ms
     self._gas_data.is_new = True
     self._gas_data.valid = self._mode_timer_valid and self._millis() - self._mode_start_time >= warmup
     self._sample_counter = sample_counter
@@ -248,7 +247,7 @@ class DFRobot_SGX6410(object):
   def get_all_gas_data(self):
     '''!
     @brief Return the cached gas measurement structure
-    @return SGXData Latest cached measurement
+    @return DFRobot_SGX6410_Data Latest cached measurement
     @n Must call update() first. Check is_new for a new sample and valid for warm-up completion.
     '''
     return self._gas_data
@@ -268,7 +267,7 @@ class DFRobot_SGX6410(object):
     @brief Read the six-byte SGX6410 tracking number
     @return Six-byte bytes on success, None on failure
     '''
-    response = self._read_cmd(SGX_CMD_GET_TRACKING_NUMBER, 6)
+    response = self._read_cmd(sgx_cmd_get_tracking_number, 6)
     return bytes(response) if response is not None else None
 
   def read_flash(self, address):
@@ -278,9 +277,9 @@ class DFRobot_SGX6410(object):
     @return Byte value on success, None on failure
     @n Other addresses are rejected on the host and send no command.
     '''
-    if address not in (SGX_I2C_ADDRESS_SHADOW_ADDR, SGX_STARTUP_MODE_SHADOW_ADDR):
+    if address not in (sgx_i2c_address_shadow_addr, sgx_startup_mode_shadow_addr):
       return None
-    if not self._write_transport([SGX_CMD_READ_FLASH, address, self._checksum([SGX_CMD_READ_FLASH, address])]):
+    if not self._write_transport([sgx_cmd_read_flash, address, self._checksum([sgx_cmd_read_flash, address])]):
       return None
     response = self._read_transport(3)
     if response is None or response[0] != 0 or self._checksum(response[:-1]) != response[-1]:
@@ -296,17 +295,17 @@ class DFRobot_SGX6410(object):
     @n The new value stays in Shadow until save_flash() commits it.
     @n Changing the I2C address takes effect after save_flash() and reset().
     '''
-    if address not in (SGX_I2C_ADDRESS_SHADOW_ADDR, SGX_STARTUP_MODE_SHADOW_ADDR):
+    if address not in (sgx_i2c_address_shadow_addr, sgx_startup_mode_shadow_addr):
       return False
-    return self._write_cmd(SGX_CMD_WRITE_FLASH, [address, data & 0xFF])
+    return self._write_cmd(sgx_cmd_write_flash, [address, data & 0xFF])
 
   def save_flash(self):
     '''!
     @brief Commit the Flash Shadow area to Flash
     @return FDL status byte on success, None on failure
-    @n Typical codes: SGX_FDL_OK (0x00) success, SGX_FDL_BUSY (0xFF) still processing.
+    @n Typical codes: sgx_fdl_ok (0x00) success, sgx_fdl_busy (0xFF) still processing.
     '''
-    if not self._write_cmd(SGX_CMD_SAVE_FLASH):
+    if not self._write_cmd(sgx_cmd_save_flash):
       return None
     time.sleep(1.0)
     response = self._read_transport(1)
@@ -318,7 +317,7 @@ class DFRobot_SGX6410(object):
     @param size Number of payload bytes to read, up to 100
     @return bytes on success, None on failure
     '''
-    response = self._read_cmd(SGX_CMD_READ_DEBUG, size)
+    response = self._read_cmd(sgx_cmd_read_debug, size)
     return bytes(response) if response is not None else None
 
   def reset(self):
@@ -327,7 +326,7 @@ class DFRobot_SGX6410(object):
     @return True on success, False on failure
     @n Command 0x8F has no response. After reset, wait for start-up and call begin() again.
     '''
-    result = self._write_cmd(SGX_CMD_RESET)
+    result = self._write_cmd(sgx_cmd_reset)
     if result:
       self._sample_counter_new = False
       self._mode_timer_valid = False
@@ -358,7 +357,7 @@ class DFRobot_SGX6410(object):
 
 
 class DFRobot_SGX6410_I2C(DFRobot_SGX6410):
-  def __init__(self, bus=1, addr=SGX_I2C_ADDR):
+  def __init__(self, bus=1, addr=sgx_i2c_addr):
     '''!
     @brief Constructor
     @param bus I2C bus number, typically 1 on Raspberry Pi
@@ -376,7 +375,7 @@ class DFRobot_SGX6410_I2C(DFRobot_SGX6410):
       message = i2c_msg.write(self._addr, data)
       self.i2cbus.i2c_rdwr(message)
       return True
-    except Exception:
+    except OSError:
       return False
 
   def _read_transport(self, length):
@@ -385,12 +384,12 @@ class DFRobot_SGX6410_I2C(DFRobot_SGX6410):
       message = i2c_msg.read(self._addr, length)
       self.i2cbus.i2c_rdwr(message)
       return list(message)
-    except Exception:
+    except OSError:
       return None
 
 
 class DFRobot_SGX6410_UART(DFRobot_SGX6410):
-  def __init__(self, baud=SGX_UART_BAUDRATE, addr=SGX_I2C_ADDR, port='/dev/ttyAMA0'):
+  def __init__(self, baud=sgx_uart_baudrate, addr=sgx_i2c_addr, port='/dev/ttyAMA0'):
     '''!
     @brief Constructor
     @param baud Baud rate, default 9600
@@ -403,7 +402,7 @@ class DFRobot_SGX6410_UART(DFRobot_SGX6410):
       raise ImportError('Install pyserial to use UART mode')
     self._addr = addr
     self._baud = baud
-    self.master = serial.Serial(port=port, baudrate=baud, bytesize=8, parity='N', stopbits=1, timeout=SGX_TIMEOUT_MS / 1000.0)
+    self.master = serial.Serial(port=port, baudrate=baud, bytesize=8, parity='N', stopbits=1, timeout=sgx_timeout_ms / 1000.0)
 
   def begin(self):
     '''!
@@ -416,19 +415,19 @@ class DFRobot_SGX6410_UART(DFRobot_SGX6410):
     time.sleep(0.02)
     if DFRobot_SGX6410.begin(self):
       return True
-    self.master.write(bytes([SGX_UART_SYNC_BYTE]))
+    self.master.write(bytes([sgx_uart_sync_byte]))
     return False
 
   def _write_transport(self, data):
     try:
       self.master.reset_input_buffer()
       return self.master.write(bytes(data)) == len(data)
-    except Exception:
+    except (OSError, serial.SerialException):
       return False
 
   def _read_transport(self, length):
     try:
       data = self.master.read(length)
       return list(data) if len(data) == length else None
-    except Exception:
+    except (OSError, serial.SerialException):
       return None

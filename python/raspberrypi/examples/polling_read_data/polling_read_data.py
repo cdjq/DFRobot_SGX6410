@@ -8,17 +8,17 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath
 from DFRobot_SGX6410 import *
 
 # Choose one communication method: uncomment only one line below.
-# SGX6410_COMM_UART = True
-SGX6410_COMM_I2C = True
+# sgx6410_comm_uart = True
+sgx6410_comm_i2c = True
 
-if ('SGX6410_COMM_UART' in globals()) == ('SGX6410_COMM_I2C' in globals()):
-  raise ValueError('Select exactly one of SGX6410_COMM_UART or SGX6410_COMM_I2C')
-I2C_BUS = 1
-ADDRESS = SGX_I2C_ADDR
-if 'SGX6410_COMM_UART' in globals():
-  sgx6410 = DFRobot_SGX6410_UART(SGX_UART_BAUDRATE, ADDRESS)
+if ('sgx6410_comm_uart' in globals()) == ('sgx6410_comm_i2c' in globals()):
+  raise ValueError('Select exactly one of sgx6410_comm_uart or sgx6410_comm_i2c')
+i2c_bus = 1
+address = sgx_i2c_addr
+if 'sgx6410_comm_uart' in globals():
+  sgx6410 = DFRobot_SGX6410_UART(sgx_uart_baudrate, address)
 else:
-  sgx6410 = DFRobot_SGX6410_I2C(I2C_BUS, ADDRESS)
+  sgx6410 = DFRobot_SGX6410_I2C(i2c_bus, address)
 
 
 def setup():

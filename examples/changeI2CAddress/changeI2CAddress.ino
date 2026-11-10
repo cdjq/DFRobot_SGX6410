@@ -14,8 +14,8 @@
 
 // Default is 0x38. Set OLD to the address currently answering on the bus.
 // Set NEW to the address to persist (bits 6:0, 0x00-0x7F).
-const uint8_t OLD_I2C_ADDRESS = 0x38;    // Factory address
-const uint8_t NEW_I2C_ADDRESS = 0x39;    // Example target address
+const uint8_t oldI2CAddress = 0x38;    // Factory address
+const uint8_t newI2CAddress = 0x39;    // Example target address
 
 /* >> 1. Choose one communication method below. */
 // #define SGX6410_COMM_UART
@@ -53,7 +53,7 @@ DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
  *     SCL    |      SCL       |        SCL            | SCL |  GPIO5  | SCL   |        SCL
  *     SDA    |      SDA       |        SDA            | SDA |  GPIO4  | SDA   |        SDA
  * --------------------------------------------------------------------------------------------------------- */
-DFRobot_SGX6410_I2C sgx6410(&Wire, OLD_I2C_ADDRESS);
+DFRobot_SGX6410_I2C sgx6410(&Wire, oldI2CAddress);
 #else
 #error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"
 #endif
@@ -71,13 +71,13 @@ void setup()
   }
   Serial.println("SGX6410 init successfully!");
   Serial.print("Changing I2C address from 0x");
-  Serial.print(OLD_I2C_ADDRESS, HEX);
+  Serial.print(oldI2CAddress, HEX);
   Serial.print(" to 0x");
-  Serial.println(NEW_I2C_ADDRESS, HEX);
+  Serial.println(newI2CAddress, HEX);
   Serial.println("Keep power stable during this process.");
 
   // Write the new address to Flash Shadow, then commit Flash
-  uint8_t status = sgx6410.setI2CAddress(NEW_I2C_ADDRESS, true);
+  uint8_t status = sgx6410.setI2CAddress(newI2CAddress, true);
   if (status != SGX_FDL_OK) {
     Serial.print("Address change failed with status: 0x");
     Serial.println(status, HEX);
@@ -93,7 +93,7 @@ void setup()
     return;
   }
   Serial.print("Sensor will restart with new address (0x");
-  Serial.print(NEW_I2C_ADDRESS, HEX);
+  Serial.print(newI2CAddress, HEX);
   Serial.println(").");
   Serial.println("Please reconnect using the new address!");
 }

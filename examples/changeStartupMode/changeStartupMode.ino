@@ -12,7 +12,7 @@
  */
 #include "DFRobot_SGX6410.h"
 
-const eSGXMode_t STARTUP_MODE = SGX_MODE_IAQ;
+const eSGXMode_t startupMode = eSgxModeIaq;
 
 /* >> 1. Choose one communication method below. */
 #define SGX6410_COMM_UART
@@ -57,13 +57,13 @@ DFRobot_SGX6410_I2C sgx6410(&Wire, SGX_I2C_ADDR);
 const char* getModeName(uint8_t mode)
 {
   switch (mode) {
-    case SGX_MODE_SUSPEND:
+    case eSgxModeSuspend:
       return "SUSPEND";
-    case SGX_MODE_IAQ:
+    case eSgxModeIaq:
       return "IAQ";
-    case SGX_MODE_ULP:
+    case eSgxModeUlp:
       return "ULP";
-    case SGX_MODE_PBAQ:
+    case eSgxModePbaq:
       return "PBAQ";
     default:
       return "UNKNOWN";
@@ -82,12 +82,12 @@ void setup()
   }
   Serial.println("SGX6410 initialized successfully!");
   Serial.print("Changing startup mode to ");
-  Serial.print(getModeName(STARTUP_MODE));
+  Serial.print(getModeName(startupMode));
   Serial.println("...");
   Serial.println("Keep power stable during this process.");
 
   // Change the current mode and persist it as the startup mode
-  uint8_t status = sgx6410.setOperationMode(STARTUP_MODE, true);
+  uint8_t status = sgx6410.setOperationMode(startupMode, true);
   if (status != SGX_FDL_OK) {
     Serial.print("Mode change failed with status: 0x");
     Serial.println(status, HEX);
@@ -103,7 +103,7 @@ void setup()
     return;
   }
   Serial.print("Sensor will restart with ");
-  Serial.print(getModeName(STARTUP_MODE));
+  Serial.print(getModeName(startupMode));
   Serial.println(" mode.");
 }
 

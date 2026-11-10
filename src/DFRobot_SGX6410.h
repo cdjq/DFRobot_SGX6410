@@ -61,11 +61,11 @@
  * @n Line values match the sensor command bytes.
  */
 typedef enum {
-  SGX_MODE_SUSPEND = 0x00, /**< Suspend mode */
-  SGX_MODE_IAQ     = 0x01, /**< IAQ 2nd generation mode, poll about every 3 s, warm-up 5 min */
-  SGX_MODE_ULP     = 0x02, /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
-  SGX_MODE_PBAQ    = 0x05, /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
-  SGX_MODE_NONE    = 0xFF, /**< Failed to read the operation mode */
+  eSgxModeSuspend = 0x00, /**< Suspend mode */
+  eSgxModeIaq     = 0x01, /**< IAQ 2nd generation mode, poll about every 3 s, warm-up 5 min */
+  eSgxModeUlp     = 0x02, /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
+  eSgxModePbaq    = 0x05, /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
+  eSgxModeNone    = 0xFF, /**< Failed to read the operation mode */
 } eSGXMode_t;
 
 /**
@@ -73,11 +73,11 @@ typedef enum {
  * @brief Select one cached gas value
  */
 typedef enum {
-  SGX_DATA_IAQ    = 0, /**< IAQ, UBA level */
-  SGX_DATA_TVOC   = 1, /**< TVOC */
-  SGX_DATA_ETOH   = 2, /**< Ethanol equivalent */
-  SGX_DATA_ECO2   = 3, /**< Estimated CO2 */
-  SGX_DATA_RELIAQ = 4  /**< Relative IAQ */
+  eSgxDataIaq    = 0, /**< IAQ, UBA level */
+  eSgxDataTvoc   = 1, /**< TVOC */
+  eSgxDataEtoh   = 2, /**< Ethanol equivalent */
+  eSgxDataEcO2   = 3, /**< Estimated CO2 */
+  eSgxDataReliaq = 4  /**< Relative IAQ */
 } eSGXDataType_t;
 
 /**
@@ -85,11 +85,11 @@ typedef enum {
  * @brief Parsed and cached gas measurement data
  */
 typedef struct {
-  float IAQ;    /**< IAQ, UBA level; NAN in PBAQ or Suspend */
-  float TVOC;   /**< TVOC, mg/m3 */
-  float ETOH;   /**< Ethanol equivalent, ppm */
-  float ECO2;   /**< Estimated CO2, ppm; NAN in PBAQ or Suspend */
-  float RELIAQ; /**< Relative IAQ; NAN in PBAQ or Suspend */
+  float iaq;    /**< IAQ, UBA level; NAN in PBAQ or Suspend */
+  float tvoc;   /**< TVOC, mg/m3 */
+  float etoh;   /**< Ethanol equivalent, ppm */
+  float ecO2;   /**< Estimated CO2, ppm; NAN in PBAQ or Suspend */
+  float reliaq; /**< Relative IAQ; NAN in PBAQ or Suspend */
   bool  isNew;  /**< True when the latest frame has a new sample counter */
   bool  valid;  /**< True when the sample was acquired after mode warm-up */
 } sSGXData_t;
@@ -129,10 +129,10 @@ public:
    * @fn setOperationMode
    * @brief Set SGX6410 operation mode
    * @param mode Operation mode (see eSGXMode_t)
-   * @n SGX_MODE_SUSPEND: Suspend mode
-   * @n SGX_MODE_IAQ: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
-   * @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
-   * @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
+   * @n eSgxModeSuspend: Suspend mode
+   * @n eSgxModeIaq: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
+   * @n eSgxModeUlp: Ultra-low power, about 90 s sample period, 15 min warm-up
+   * @n eSgxModePbaq: PBAQ, about 5 s sample period, 5 min warm-up
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
    * @param save Save this mode as the startup mode and commit all Flash Shadow settings, default false
    * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid mode,
@@ -158,7 +158,7 @@ public:
   /**
    * @fn getOperationMode
    * @brief Read the current SGX6410 operation mode
-   * @return eSGXMode_t Current operation mode, or SGX_MODE_NONE (0xFF) if the read fails
+   * @return eSGXMode_t Current operation mode, or eSgxModeNone (0xFF) if the read fails
    */
   eSGXMode_t getOperationMode(void);
 
@@ -191,11 +191,11 @@ public:
    * @fn getSingleGasData
    * @brief Return one value from the cached measurement
    * @param dataType Gas value selected by eSGXDataType_t
-   * @n SGX_DATA_IAQ: IAQ
-   * @n SGX_DATA_TVOC: TVOC
-   * @n SGX_DATA_ETOH: ETOH
-   * @n SGX_DATA_ECO2: estimated CO2
-   * @n SGX_DATA_RELIAQ: relative IAQ
+   * @n eSgxDataIaq: IAQ
+   * @n eSgxDataTvoc: TVOC
+   * @n eSgxDataEtoh: ETOH
+   * @n eSgxDataEcO2: estimated CO2
+   * @n eSgxDataReliaq: relative IAQ
    * @return float Cached value, or NAN if unsupported in the current mode
    * @n Must call update() first.
    */
@@ -357,8 +357,10 @@ protected:
 private:
   TwoWire *_pWire;
   uint8_t  _address;
+#if defined(ESP32) || defined(ESP8266)
   uint8_t  _sclPin;
   uint8_t  _sdaPin;
+#endif
 };
 
 class DFRobot_SGX6410_UART : public DFRobot_SGX6410 {
@@ -409,8 +411,10 @@ private:
   HardwareSerial *_serial;
 #endif
   uint32_t _baud;
+#if defined(ESP32)
   int8_t   _rxPin;
   int8_t   _txPin;
+#endif
 };
 
 #endif

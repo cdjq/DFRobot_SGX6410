@@ -135,7 +135,7 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
   def get_all_gas_data(self)
     '''!
       @brief Return the cached gas measurement structure
-      @return SGXData Latest cached measurement
+      @return DFRobot_SGX6410_Data Latest cached measurement
       @n Must call update() first. Check is_new for a new sample and valid for warm-up completion.
     '''
 
@@ -175,7 +175,7 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
     '''!
       @brief Commit the Flash Shadow area to Flash
       @return FDL status byte on success, None on failure
-      @n Typical codes: SGX_FDL_OK (0x00) success, SGX_FDL_BUSY (0xFF) still processing.
+      @n Typical codes: sgx_fdl_ok (0x00) success, sgx_fdl_busy (0xFF) still processing.
     '''
 
   def read_debug_data(self, size)

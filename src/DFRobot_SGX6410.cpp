@@ -19,13 +19,13 @@ static uint8_t sgxChecksum(const uint8_t *data, size_t len)
   return (uint8_t)~sum;
 }
 
-DFRobot_SGX6410::DFRobot_SGX6410() : _mode(SGX_MODE_SUSPEND), _sampleCounter(0), _sampleCounterNew(false), _modeStartTime(0), _modeTimerValid(false)
+DFRobot_SGX6410::DFRobot_SGX6410() : _mode(eSgxModeSuspend), _sampleCounter(0), _sampleCounterNew(false), _modeStartTime(0), _modeTimerValid(false)
 {
-  _gasData.IAQ    = NAN;
-  _gasData.TVOC   = NAN;
-  _gasData.ETOH   = NAN;
-  _gasData.ECO2   = NAN;
-  _gasData.RELIAQ = NAN;
+  _gasData.iaq    = NAN;
+  _gasData.tvoc   = NAN;
+  _gasData.etoh   = NAN;
+  _gasData.ecO2   = NAN;
+  _gasData.reliaq = NAN;
   _gasData.isNew  = false;
   _gasData.valid  = false;
 }
@@ -62,12 +62,12 @@ bool DFRobot_SGX6410::readCmd(uint8_t cmd, uint8_t *data, size_t size)
 
 bool DFRobot_SGX6410::begin(void)
 {
-  uint8_t mode = SGX_MODE_SUSPEND;
+  uint8_t mode = eSgxModeSuspend;
   if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &mode, 1))
     return false;    // Get the current operation mode.
   _mode = (eSGXMode_t)mode;
   // Only these three modes will have a preheating timer.
-  _modeTimerValid = mode == SGX_MODE_IAQ || mode == SGX_MODE_ULP || mode == SGX_MODE_PBAQ;
+  _modeTimerValid = mode == eSgxModeIaq || mode == eSgxModeUlp || mode == eSgxModePbaq;
   // Start the preheating timer.
   _modeStartTime    = millis();
   _sampleCounterNew = false;
@@ -93,14 +93,14 @@ bool DFRobot_SGX6410::getProductID(uint16_t &productId, uint8_t firmwareVer[3])
 
 uint8_t DFRobot_SGX6410::setOperationMode(eSGXMode_t mode, bool save)
 {
-  if (mode != SGX_MODE_SUSPEND && mode != SGX_MODE_IAQ && mode != SGX_MODE_ULP && mode != SGX_MODE_PBAQ)
+  if (mode != eSgxModeSuspend && mode != eSgxModeIaq && mode != eSgxModeUlp && mode != eSgxModePbaq)
     return SGX_FDL_PARAMETER_ERROR;
   uint8_t value = (uint8_t)mode;
   if (!writeCmd(SGX_CMD_SET_OPERATION_MODE, &value, 1))
     return SGX_COMM_ERROR;
   _mode             = mode;
   _sampleCounterNew = false;
-  _modeTimerValid   = mode == SGX_MODE_IAQ || mode == SGX_MODE_ULP || mode == SGX_MODE_PBAQ;
+  _modeTimerValid   = mode == eSgxModeIaq || mode == eSgxModeUlp || mode == eSgxModePbaq;
   _modeStartTime    = millis();
   _gasData.isNew    = false;
   _gasData.valid    = false;
@@ -125,9 +125,9 @@ bool DFRobot_SGX6410::setHumidityCompensate(float rh)
 
 eSGXMode_t DFRobot_SGX6410::getOperationMode(void)
 {
-  uint8_t value = SGX_MODE_NONE;
+  uint8_t value = eSgxModeNone;
   if (!readCmd(SGX_CMD_GET_OPERATION_MODE, &value, 1))
-    return SGX_MODE_NONE;
+    return eSgxModeNone;
   _mode = (eSGXMode_t)value;
   return _mode;
 }
@@ -136,26 +136,26 @@ bool DFRobot_SGX6410::parseMeasurement(const uint8_t *values, size_t size, sSGXD
 {
   if (values == nullptr)
     return false;
-  if (_mode == SGX_MODE_IAQ || _mode == SGX_MODE_ULP) {
+  if (_mode == eSgxModeIaq || _mode == eSgxModeUlp) {
     // The first payload byte is the sample counter, followed by 8 data bytes.
     if (size != 9)
       return false;
-    data.IAQ    = values[1] / 10.0f;
-    data.TVOC   = ((uint16_t)values[2] | ((uint16_t)values[3] << 8)) / 100.0f;
-    data.ETOH   = ((uint16_t)values[4] | ((uint16_t)values[5] << 8)) / 100.0f;
-    data.ECO2   = (uint16_t)values[6] | ((uint16_t)values[7] << 8);
-    data.RELIAQ = values[8] / 10.0f;
+    data.iaq    = values[1] / 10.0f;
+    data.tvoc   = ((uint16_t)values[2] | ((uint16_t)values[3] << 8)) / 100.0f;
+    data.etoh   = ((uint16_t)values[4] | ((uint16_t)values[5] << 8)) / 100.0f;
+    data.ecO2   = (uint16_t)values[6] | ((uint16_t)values[7] << 8);
+    data.reliaq = values[8] / 10.0f;
     return true;
   }
-  if (_mode == SGX_MODE_PBAQ) {
+  if (_mode == eSgxModePbaq) {
     // The first payload byte is the sample counter, followed by 4 data bytes.
     if (size != 5)
       return false;
-    data.IAQ    = NAN;
-    data.ECO2   = NAN;
-    data.RELIAQ = NAN;
-    data.TVOC   = ((uint16_t)values[1] | ((uint16_t)values[2] << 8)) / 1000.0f;
-    data.ETOH   = ((uint16_t)values[3] | ((uint16_t)values[4] << 8)) / 1000.0f;
+    data.iaq    = NAN;
+    data.ecO2   = NAN;
+    data.reliaq = NAN;
+    data.tvoc   = ((uint16_t)values[1] | ((uint16_t)values[2] << 8)) / 1000.0f;
+    data.etoh   = ((uint16_t)values[3] | ((uint16_t)values[4] << 8)) / 1000.0f;
     return true;
   }
   return false;
@@ -164,11 +164,11 @@ bool DFRobot_SGX6410::parseMeasurement(const uint8_t *values, size_t size, sSGXD
 bool DFRobot_SGX6410::update(void)
 {
   _gasData.isNew = false;
-  if (_mode != SGX_MODE_IAQ && _mode != SGX_MODE_ULP && _mode != SGX_MODE_PBAQ)
+  if (_mode != eSgxModeIaq && _mode != eSgxModeUlp && _mode != eSgxModePbaq)
     return false;
   // readCmd() receives payload length only. The complete response is
   // status + payload + checksum: 7 bytes for PBAQ and 11 bytes for IAQ/ULP.
-  size_t  payloadSize = (_mode == SGX_MODE_PBAQ) ? 5 : 9;
+  size_t  payloadSize = (_mode == eSgxModePbaq) ? 5 : 9;
   uint8_t values[9];
   if (!readCmd(SGX_CMD_GET_MEASUREMENT, values, payloadSize))
     return false;
@@ -183,9 +183,9 @@ bool DFRobot_SGX6410::update(void)
     return false;
 
   uint32_t warmupTime = SGX_WARMUP_IAQ_MS;
-  if (_mode == SGX_MODE_ULP)
+  if (_mode == eSgxModeUlp)
     warmupTime = SGX_WARMUP_ULP_MS;
-  if (_mode == SGX_MODE_PBAQ)
+  if (_mode == eSgxModePbaq)
     warmupTime = SGX_WARMUP_PBAQ_MS;
   parsedData.isNew  = true;
   parsedData.valid  = _modeTimerValid && (uint32_t)(millis() - _modeStartTime) >= warmupTime;
@@ -198,16 +198,16 @@ bool DFRobot_SGX6410::update(void)
 float DFRobot_SGX6410::getSingleGasData(eSGXDataType_t dataType)
 {
   switch (dataType) {
-    case SGX_DATA_IAQ:
-      return _gasData.IAQ;
-    case SGX_DATA_TVOC:
-      return _gasData.TVOC;
-    case SGX_DATA_ETOH:
-      return _gasData.ETOH;
-    case SGX_DATA_ECO2:
-      return _gasData.ECO2;
-    case SGX_DATA_RELIAQ:
-      return _gasData.RELIAQ;
+    case eSgxDataIaq:
+      return _gasData.iaq;
+    case eSgxDataTvoc:
+      return _gasData.tvoc;
+    case eSgxDataEtoh:
+      return _gasData.etoh;
+    case eSgxDataEcO2:
+      return _gasData.ecO2;
+    case eSgxDataReliaq:
+      return _gasData.reliaq;
     default:
       return NAN;
   }
@@ -296,7 +296,16 @@ bool DFRobot_SGX6410::isDataValid(void)
   return _gasData.valid;
 }
 
-DFRobot_SGX6410_I2C::DFRobot_SGX6410_I2C(TwoWire *pWire, uint8_t address, uint8_t sclPin, uint8_t sdaPin) : _pWire(pWire), _address(address), _sclPin(sclPin), _sdaPin(sdaPin) {}
+DFRobot_SGX6410_I2C::DFRobot_SGX6410_I2C(TwoWire *pWire, uint8_t address, uint8_t sclPin, uint8_t sdaPin) : _pWire(pWire), _address(address)
+#if defined(ESP32) || defined(ESP8266)
+  , _sclPin(sclPin), _sdaPin(sdaPin)
+#endif
+{
+#if !defined(ESP32) && !defined(ESP8266)
+  (void)sclPin;
+  (void)sdaPin;
+#endif
+}
 
 bool DFRobot_SGX6410_I2C::begin(void)
 {
@@ -335,9 +344,18 @@ int16_t DFRobot_SGX6410_I2C::interfaceRead(uint8_t *data, size_t len)
 }
 
 #if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
-DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(SoftwareSerial *sSerial, uint32_t baud) : _serial(sSerial), _baud(baud), _rxPin(0), _txPin(0) {}
+DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(SoftwareSerial *sSerial, uint32_t baud) : _serial(sSerial), _baud(baud) {}
 #else
-DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(HardwareSerial *hSerial, uint32_t baud, int8_t rxPin, int8_t txPin) : _serial(hSerial), _baud(baud), _rxPin(rxPin), _txPin(txPin) {}
+DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(HardwareSerial *hSerial, uint32_t baud, int8_t rxPin, int8_t txPin) : _serial(hSerial), _baud(baud)
+#if defined(ESP32)
+  , _rxPin(rxPin), _txPin(txPin)
+#endif
+{
+#if !defined(ESP32)
+  (void)rxPin;
+  (void)txPin;
+#endif
+}
 #endif
 
 bool DFRobot_SGX6410_UART::begin(void)
