@@ -22,21 +22,21 @@
  *      RX    |      TX        |     Serial1 TX1       |  7  |  GPIO5  |  TX1  |     Serial1 TX
  *      TX    |      RX        |     Serial1 RX1       |  6  |  GPIO4  |  RX1  |     Serial1 RX
  * --------------------------------------------------------------------------------------------------------- */
-  #if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
-    #include <SoftwareSerial.h>
-  #endif
-  #if defined(ARDUINO_AVR_UNO)
-    SoftwareSerial sgxSerial(/*rx =*/6, /*tx =*/7);
-    DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
-  #elif defined(ESP8266)
-    SoftwareSerial sgxSerial(/*rx =*/4, /*tx =*/5);
-    DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
-  #elif defined(ESP32)
-    // Use Serial1 default pins; pass RX/TX explicitly to match custom wiring.
-    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
-  #else
-    DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
-  #endif
+#if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
+#include <SoftwareSerial.h>
+#endif
+#if defined(ARDUINO_AVR_UNO)
+SoftwareSerial       sgxSerial(/*rx =*/6, /*tx =*/7);
+DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
+#elif defined(ESP8266)
+SoftwareSerial       sgxSerial(/*rx =*/4, /*tx =*/5);
+DFRobot_SGX6410_UART sgx6410(&sgxSerial, SGX_UART_BAUDRATE);
+#elif defined(ESP32)
+// Use Serial1 default pins; pass RX/TX explicitly to match custom wiring.
+DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
+#else
+DFRobot_SGX6410_UART sgx6410(&Serial1, SGX_UART_BAUDRATE);
+#endif
 #elif defined(SGX6410_COMM_I2C)
 /* ---------------------------------------------------------------------------------------------------------
  *   SGX6410  |      MCU       | Leonardo/Mega2560/M0 | UNO | ESP8266 | ESP32 | Other Wire boards
@@ -45,12 +45,13 @@
  *     SCL    |      SCL       |        SCL            | SCL |  GPIO5  | SCL   |        SCL
  *     SDA    |      SDA       |        SDA            | SDA |  GPIO4  | SDA   |        SDA
  * --------------------------------------------------------------------------------------------------------- */
-  DFRobot_SGX6410_I2C sgx6410(&Wire, SGX_I2C_ADDR);
+DFRobot_SGX6410_I2C sgx6410(&Wire, SGX_I2C_ADDR);
 #else
-  #error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"
+#error "Select SGX6410_COMM_UART or SGX6410_COMM_I2C"
 #endif
 
-void setup() {
+void setup()
+{
   // Open the debug serial port
   Serial.begin(115200);
   delay(1000);
@@ -62,7 +63,6 @@ void setup() {
   }
   Serial.println("SGX6410 init success!");
 
-
   // IAQ: about 3 s sample period, 5 min warm-up
   if (sgx6410.setOperationMode(SGX_MODE_IAQ) != SGX_FDL_OK) {
     Serial.println("Failed to set IAQ mode!");
@@ -71,7 +71,8 @@ void setup() {
   delay(100);
 }
 
-void loop() {
+void loop()
+{
   // update() reads the measurement frame and scales it
   if (sgx6410.update()) {
     const sSGXData_t &data = sgx6410.getAllGasData();
@@ -103,4 +104,3 @@ void loop() {
 
   delay(1000);
 }
-

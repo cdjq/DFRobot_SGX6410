@@ -1,4 +1,5 @@
 '''! Persist the SGX6410 startup operation mode.'''
+
 import os
 import sys
 import time
@@ -7,7 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath
 from DFRobot_SGX6410 import *
 
 # Choose one communication method: uncomment only one line below.
-#SGX6410_COMM_UART = True
+# SGX6410_COMM_UART = True
 SGX6410_COMM_I2C = True
 
 if ('SGX6410_COMM_UART' in globals()) == ('SGX6410_COMM_I2C' in globals()):

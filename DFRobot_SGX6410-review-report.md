@@ -219,8 +219,8 @@ private:
 
 **结论：** 不满足
 
-**reason：**  
-1. 已有 `## Product Link` / `## 产品链接`（含 SKU `SEN0771`），但 Table of Contents / 目录未列出该章，目录与标题未互指齐全。  
+**reason：**
+1. 已有 `## Product Link` / `## 产品链接`（含 SKU `SEN0771`），但 Table of Contents / 目录未列出该章，目录与标题未互指齐全。
 2. 章节顺序、库安装两条、兼容性主板表（√ / 未测试、无总线列）、History / Credits 格式具备；无多余「接线」「示例」顶层章。
 
 **suggestion：**
@@ -265,9 +265,9 @@ SKU: SEN0771
 
 **结论：** 不满足
 
-**reason：**  
-1. `polling_readData` 默认 `SGX6410_COMM_I2C`，I2C 分支无接线表；UART 表仅在 UART 分支。  
-2. `interrupt_readData` 使用 `interruptPin`（ESP32=5、ESP8266=12，其它板中断号 0→UNO D2），接线表只有 UART 电源与收发脚，未列 INT，与代码用到的中断脚不一致。  
+**reason：**
+1. `polling_readData` 默认 `SGX6410_COMM_I2C`，I2C 分支无接线表；UART 表仅在 UART 分支。
+2. `interrupt_readData` 使用 `interruptPin`（ESP32=5、ESP8266=12，其它板中断号 0→UNO D2），接线表只有 UART 电源与收发脚，未列 INT，与代码用到的中断脚不一致。
 3. 其余示例 UART 表与 Soft/Hard 构造引脚一致。
 
 **suggestion：**

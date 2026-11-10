@@ -21,40 +21,39 @@
 #include <SoftwareSerial.h>
 #endif
 
-#define SGX_PRODUCT_ID               0x2310  ///< Expected SGX6410 product ID
-#define SGX_TIMEOUT_MS               100     ///< Command response timeout in ms
-#define SGX_I2C_ADDR                 0x38    ///< Default 7-bit I2C slave address (bits 6:0)
-#define SGX_UART_BAUDRATE            9600    ///< Default UART baud rate
-#define SGX_UART_SYNC_BYTE           0xFF    ///< UART command-frame synchronization byte
+#define SGX_PRODUCT_ID     0x2310    ///< Expected SGX6410 product ID
+#define SGX_TIMEOUT_MS     100       ///< Command response timeout in ms
+#define SGX_I2C_ADDR       0x38      ///< Default 7-bit I2C slave address (bits 6:0)
+#define SGX_UART_BAUDRATE  9600      ///< Default UART baud rate
+#define SGX_UART_SYNC_BYTE 0xFF      ///< UART command-frame synchronization byte
 
-#define SGX_WARMUP_IAQ_MS            300000UL  ///< IAQ 2nd Gen warm-up time in ms
-#define SGX_WARMUP_ULP_MS            900000UL  ///< ULP warm-up time in ms
-#define SGX_WARMUP_PBAQ_MS           300000UL  ///< PBAQ warm-up time in ms
-#define SGX_I2C_ADDRESS_SHADOW_ADDR  0x00    ///< Flash Shadow: I2C address byte (bit7 don't care, bits 6:0 slave address)
-#define SGX_STARTUP_MODE_SHADOW_ADDR 0x03    ///< Flash Shadow address for startup mode
+#define SGX_WARMUP_IAQ_MS            300000UL    ///< IAQ 2nd Gen warm-up time in ms
+#define SGX_WARMUP_ULP_MS            900000UL    ///< ULP warm-up time in ms
+#define SGX_WARMUP_PBAQ_MS           300000UL    ///< PBAQ warm-up time in ms
+#define SGX_I2C_ADDRESS_SHADOW_ADDR  0x00        ///< Flash Shadow: I2C address byte (bit7 don't care, bits 6:0 slave address)
+#define SGX_STARTUP_MODE_SHADOW_ADDR 0x03        ///< Flash Shadow address for startup mode
 
-#define SGX_CMD_GET_PRODUCT_ID       0x00    ///< Get product ID
-#define SGX_CMD_GET_TRACKING_NUMBER  0x01    ///< Get tracking number
-#define SGX_CMD_GET_OPERATION_MODE   0x10    ///< Get operation mode
-#define SGX_CMD_SET_OPERATION_MODE   0x11    ///< Set operation mode
-#define SGX_CMD_SET_HUMIDITY         0x12    ///< Set humidity compensation
-#define SGX_CMD_GET_MEASUREMENT      0x18    ///< Get measurement results
-#define SGX_CMD_READ_FLASH           0x40    ///< Read Flash Shadow byte
-#define SGX_CMD_WRITE_FLASH          0x41    ///< Write Flash Shadow byte
-#define SGX_CMD_SAVE_FLASH           0x42    ///< Write Flash and return FDL status
-#define SGX_CMD_READ_DEBUG           0x31    ///< Read debug data
-#define SGX_CMD_RESET                0x8F    ///< Reset module; no response
+#define SGX_CMD_GET_PRODUCT_ID      0x00    ///< Get product ID
+#define SGX_CMD_GET_TRACKING_NUMBER 0x01    ///< Get tracking number
+#define SGX_CMD_GET_OPERATION_MODE  0x10    ///< Get operation mode
+#define SGX_CMD_SET_OPERATION_MODE  0x11    ///< Set operation mode
+#define SGX_CMD_SET_HUMIDITY        0x12    ///< Set humidity compensation
+#define SGX_CMD_GET_MEASUREMENT     0x18    ///< Get measurement results
+#define SGX_CMD_READ_FLASH          0x40    ///< Read Flash Shadow byte
+#define SGX_CMD_WRITE_FLASH         0x41    ///< Write Flash Shadow byte
+#define SGX_CMD_SAVE_FLASH          0x42    ///< Write Flash and return FDL status
+#define SGX_CMD_READ_DEBUG          0x31    ///< Read debug data
+#define SGX_CMD_RESET               0x8F    ///< Reset module; no response
 
-
-#define SGX_FDL_IDLE                0x30    ///< Idle; ready to receive request
-#define SGX_FDL_OK                  0x00    ///< Command finished without problems
-#define SGX_FDL_BUSY                0xFF    ///< Command is being processed
-#define SGX_FDL_PROTECTION_ERROR    0x10    ///< Access right conflict
-#define SGX_FDL_ERASE_ERROR         0x1A    ///< Erase error
-#define SGX_FDL_BLANK_CHECK_ERROR   0x1B    ///< Blank check or verify margin violated
-#define SGX_FDL_WRITE_ERROR         0x1C    ///< Write error
-#define SGX_FDL_PARAMETER_ERROR     0x05    ///< Parameter error
-#define SGX_COMM_ERROR              0xFE    ///< Host-side communication failure (not an FDL status)
+#define SGX_FDL_IDLE              0x30    ///< Idle; ready to receive request
+#define SGX_FDL_OK                0x00    ///< Command finished without problems
+#define SGX_FDL_BUSY              0xFF    ///< Command is being processed
+#define SGX_FDL_PROTECTION_ERROR  0x10    ///< Access right conflict
+#define SGX_FDL_ERASE_ERROR       0x1A    ///< Erase error
+#define SGX_FDL_BLANK_CHECK_ERROR 0x1B    ///< Blank check or verify margin violated
+#define SGX_FDL_WRITE_ERROR       0x1C    ///< Write error
+#define SGX_FDL_PARAMETER_ERROR   0x05    ///< Parameter error
+#define SGX_COMM_ERROR            0xFE    ///< Host-side communication failure (not an FDL status)
 
 /**
  * @enum eSGXMode_t
@@ -62,11 +61,11 @@
  * @n Line values match the sensor command bytes.
  */
 typedef enum {
-  SGX_MODE_SUSPEND      = 0x00,    /**< Suspend mode */
-  SGX_MODE_IAQ          = 0x01,    /**< IAQ 2nd generation mode, poll about every 3 s, warm-up 5 min */
-  SGX_MODE_ULP          = 0x02,    /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
-  SGX_MODE_PBAQ         = 0x05,    /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
-  SGX_MODE_NONE         = 0xFF,    /**< Failed to read the operation mode */
+  SGX_MODE_SUSPEND = 0x00, /**< Suspend mode */
+  SGX_MODE_IAQ     = 0x01, /**< IAQ 2nd generation mode, poll about every 3 s, warm-up 5 min */
+  SGX_MODE_ULP     = 0x02, /**< Ultra-low power mode, poll about every 90 s, warm-up 15 min */
+  SGX_MODE_PBAQ    = 0x05, /**< PBAQ mode, poll about every 5 s, warm-up 5 min */
+  SGX_MODE_NONE    = 0xFF, /**< Failed to read the operation mode */
 } eSGXMode_t;
 
 /**
@@ -74,11 +73,11 @@ typedef enum {
  * @brief Select one cached gas value
  */
 typedef enum {
-  SGX_DATA_IAQ    = 0,    /**< IAQ, UBA level */
-  SGX_DATA_TVOC   = 1,    /**< TVOC */
-  SGX_DATA_ETOH   = 2,    /**< Ethanol equivalent */
-  SGX_DATA_ECO2   = 3,    /**< Estimated CO2 */
-  SGX_DATA_RELIAQ = 4     /**< Relative IAQ */
+  SGX_DATA_IAQ    = 0, /**< IAQ, UBA level */
+  SGX_DATA_TVOC   = 1, /**< TVOC */
+  SGX_DATA_ETOH   = 2, /**< Ethanol equivalent */
+  SGX_DATA_ECO2   = 3, /**< Estimated CO2 */
+  SGX_DATA_RELIAQ = 4  /**< Relative IAQ */
 } eSGXDataType_t;
 
 /**
@@ -86,13 +85,13 @@ typedef enum {
  * @brief Parsed and cached gas measurement data
  */
 typedef struct {
-  float IAQ;     /**< IAQ, UBA level; NAN in PBAQ or Suspend */
-  float TVOC;    /**< TVOC, mg/m3 */
-  float ETOH;    /**< Ethanol equivalent, ppm */
-  float ECO2;    /**< Estimated CO2, ppm; NAN in PBAQ or Suspend */
-  float RELIAQ;  /**< Relative IAQ; NAN in PBAQ or Suspend */
-  bool  isNew;   /**< True when the latest frame has a new sample counter */
-  bool  valid;   /**< True when the sample was acquired after mode warm-up */
+  float IAQ;    /**< IAQ, UBA level; NAN in PBAQ or Suspend */
+  float TVOC;   /**< TVOC, mg/m3 */
+  float ETOH;   /**< Ethanol equivalent, ppm */
+  float ECO2;   /**< Estimated CO2, ppm; NAN in PBAQ or Suspend */
+  float RELIAQ; /**< Relative IAQ; NAN in PBAQ or Suspend */
+  bool  isNew;  /**< True when the latest frame has a new sample counter */
+  bool  valid;  /**< True when the sample was acquired after mode warm-up */
 } sSGXData_t;
 
 class DFRobot_SGX6410 {
@@ -183,7 +182,10 @@ public:
    * @return const sSGXData_t & Latest cached measurement
    * @n Must call update() first. Check isNew for a new sample and valid for warm-up completion.
    */
-  const sSGXData_t &getAllGasData(void) const { return _gasData; }
+  const sSGXData_t &getAllGasData(void) const
+  {
+    return _gasData;
+  }
 
   /**
    * @fn getSingleGasData
@@ -305,20 +307,21 @@ public:
   bool isDataValid(void);
 
 protected:
-  virtual bool interfaceWrite(const uint8_t *data, size_t len) = 0;
-  virtual int16_t interfaceRead(uint8_t *data, size_t len) = 0;
-  bool writeCmd(uint8_t cmd, const uint8_t *data, size_t size);
-  bool readCmd(uint8_t cmd, uint8_t *data, size_t size);
-  bool parseMeasurement(const uint8_t *values, size_t size, sSGXData_t &data);
+  virtual bool    interfaceWrite(const uint8_t *data, size_t len) = 0;
+  virtual int16_t interfaceRead(uint8_t *data, size_t len)        = 0;
+  bool            writeCmd(uint8_t cmd, const uint8_t *data, size_t size);
+  bool            readCmd(uint8_t cmd, uint8_t *data, size_t size);
+  bool            parseMeasurement(const uint8_t *values, size_t size, sSGXData_t &data);
+
 private:
   eSGXMode_t _mode;
   sSGXData_t _gasData;
   // Last sample counter returned by Get Measurement Results. It is not part
   // of sSGXData_t, but is used to reject repeated measurement frames.
-  uint8_t _sampleCounter;
-  bool _sampleCounterNew;
+  uint8_t  _sampleCounter;
+  bool     _sampleCounterNew;
   uint32_t _modeStartTime;
-  bool _modeTimerValid;
+  bool     _modeTimerValid;
 };
 
 class DFRobot_SGX6410_I2C : public DFRobot_SGX6410 {
@@ -346,14 +349,16 @@ public:
    * @n On ESP32/ESP8266, custom SCL/SDA from the constructor are applied here. UNO always uses the default Wire pins.
    */
   bool begin(void) override;
+
 protected:
-  bool interfaceWrite(const uint8_t *data, size_t len) override;
+  bool    interfaceWrite(const uint8_t *data, size_t len) override;
   int16_t interfaceRead(uint8_t *data, size_t len) override;
+
 private:
-  TwoWire * _pWire;
-  uint8_t   _address;
-  uint8_t _sclPin;
-  uint8_t _sdaPin;
+  TwoWire *_pWire;
+  uint8_t  _address;
+  uint8_t  _sclPin;
+  uint8_t  _sdaPin;
 };
 
 class DFRobot_SGX6410_UART : public DFRobot_SGX6410 {
@@ -378,10 +383,7 @@ public:
    * @n Default line settings are 9600 8N1.
    * @n ESP32: pass rxPin/txPin to remap Serial1, or omit them to keep the current pin assignments or use the core defaults.
    */
-  DFRobot_SGX6410_UART(HardwareSerial *hSerial,
-                       uint32_t baud = SGX_UART_BAUDRATE,
-                       int8_t rxPin = -1,
-                       int8_t txPin = -1);
+  DFRobot_SGX6410_UART(HardwareSerial *hSerial, uint32_t baud = SGX_UART_BAUDRATE, int8_t rxPin = -1, int8_t txPin = -1);
 #endif
 
   /**
@@ -395,9 +397,11 @@ public:
    * @n If the first command fails, sends the 0xFF sync byte. Call begin() again to retry.
    */
   bool begin(void) override;
+
 protected:
-  bool interfaceWrite(const uint8_t *data, size_t len) override;
+  bool    interfaceWrite(const uint8_t *data, size_t len) override;
   int16_t interfaceRead(uint8_t *data, size_t len) override;
+
 private:
 #if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
   SoftwareSerial *_serial;
@@ -405,8 +409,8 @@ private:
   HardwareSerial *_serial;
 #endif
   uint32_t _baud;
-  int8_t _rxPin;
-  int8_t _txPin;
+  int8_t   _rxPin;
+  int8_t   _txPin;
 };
 
 #endif
