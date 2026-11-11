@@ -203,7 +203,7 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
 
 | Python  | Work Well | Work Wrong | Untested | Remarks |
 | ------- | :-------: | :--------: | :------: | ------- |
-| Python3 |           |            |    √     |         |
+| Python3 |        √     |            |       |         |
 
 ## History
 

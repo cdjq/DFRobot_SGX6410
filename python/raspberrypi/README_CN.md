@@ -203,7 +203,7 @@ python3 examples/polling_read_data/polling_read_data.py
 
 | Python  | Work Well | Work Wrong | Untested | Remarks |
 | ------- | :-------: | :--------: | :------: | ------- |
-| Python3 |           |            |    √     |         |
+| Python3 |        √     |            |       |         |
 
 ## 历史
 
