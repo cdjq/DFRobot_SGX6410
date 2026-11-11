@@ -30,11 +30,8 @@ def setup():
   print('Changing I2C address from 0x%X to 0x%X' % (old_address, new_address))
   print('Keep power stable during this process.')
 
-  # Write the new address to Flash Shadow, then commit Flash
-  if not sgx6410.write_flash(sgx_i2c_address_shadow_addr, new_address):
-    print('Failed to write I2C address to Flash Shadow')
-    return
-  status = sgx6410.save_flash()
+  # Update the setting and commit it to Flash
+  status = sgx6410.set_i2c_address(new_address, save=True)
   if status is None:
     print('Failed to receive Flash write status')
     return

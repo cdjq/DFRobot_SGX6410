@@ -134,7 +134,7 @@ SKU: SEN0771
    * @n Mode change is a maintenance action. The host restarts warm-up and clears isNew/valid.
    * @param save Save this mode as the startup mode and commit all Flash Shadow settings, default false
    * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid mode,
-   * @n SGX_COMM_ERROR on communication failure, or the FDL status from saveFlash().
+   * @n SGX_COMM_ERROR on communication failure, or the FDL status from the Flash commit.
    * @n The current mode changes immediately. No automatic reset.
    * @n With save=false, success only means the mode command was sent.
    * @n If saving fails, the current mode has already changed.
@@ -207,61 +207,17 @@ SKU: SEN0771
   bool getTrackingNumber(uint8_t *number);
 
   /**
-   * @fn readFlash
-   * @brief Read one byte from the Flash Shadow area
-   * @param address One-byte Flash Shadow address
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address byte
-   * @n   bit 7 = don't care; bits 6:0 = 7-bit slave address (0x00-0x7F), default 0x38
-   * @n SGX_STARTUP_MODE_SHADOW_ADDR (0x03): startup operation mode
-   * @param data Output byte read from the requested address
-   * @return bool
-   * @retval true  Read successful
-   * @retval false Unsupported address or read failed
-   * @n Other addresses are rejected on the host and send no command.
-   */
-  bool readFlash(uint8_t address, uint8_t &data);
-
-  /**
    * @fn setI2CAddress
    * @brief Set the I2C slave address in Flash Shadow and optionally save to Flash
    * @param address 7-bit slave address, 0x00-0x7F; other values send no command
    * @param save Whether to commit all Flash Shadow settings to Flash, default false
    * @return SGX_FDL_OK on success, SGX_FDL_PARAMETER_ERROR for an invalid address,
-   * @n SGX_COMM_ERROR on communication failure, or the FDL status from saveFlash().
+   * @n SGX_COMM_ERROR on communication failure, or the FDL status from the Flash commit.
    * @n With save=false, success only means the Shadow write command was sent.
    * @n The address takes effect after saving and resetting the sensor. No automatic reset.
    * @n After reset, recreate the I2C object with the new address.
    */
   uint8_t setI2CAddress(uint8_t address, bool save = false);
-
-  /**
-   * @fn writeFlash
-   * @brief Write one byte to the Flash Shadow area
-   * @param address One-byte Flash Shadow address
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR (0x00): I2C address byte
-   * @n   bit 7 = don't care; bits 6:0 = 7-bit slave address (0x00-0x7F), default 0x38
-   * @n SGX_STARTUP_MODE_SHADOW_ADDR (0x03): startup operation mode
-   * @param data Byte to write
-   * @n For I2C address (shadow 0x00): bit 7 = don't care; bits 6:0 = slave address 0x00-0x7F
-   * @return bool
-   * @retval true  Command sent successfully
-   * @retval false Unsupported address or write failed
-   * @n The new value stays in Shadow until saveFlash() commits it.
-   * @n Changing the I2C address takes effect after saveFlash() and reset().
-   */
-  bool writeFlash(uint8_t address, uint8_t data);
-
-  /**
-   * @fn saveFlash
-   * @brief Commit the Flash Shadow area to Flash
-   * @param status Output FDL status byte returned by the sensor
-   * @return bool
-   * @retval true  Status byte received
-   * @retval false Write or read failed
-   * @n The request has no payload. The response is one raw FDL status byte.
-   * @n Typical codes: SGX_FDL_OK (0x00) success, SGX_FDL_BUSY (0xFF) still processing.
-   */
-  bool saveFlash(uint8_t &status);
 
   /**
    * @fn readDebugData
@@ -311,6 +267,8 @@ SKU: SEN0771
 | Leonardo     |      √      |            |      |         |
 | ESP32        |      √      |            |     |         |
 | ESP8266      |      √      |            |      |         |
+| FireBeetle M0 |      √      |            |        |         |
+| micro:bit     |      √      |            |        |         |
 
 ## History
 

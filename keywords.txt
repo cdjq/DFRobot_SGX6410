@@ -26,10 +26,7 @@ update                  KEYWORD2
 getAllGasData           KEYWORD2
 getSingleGasData        KEYWORD2
 getTrackingNumber       KEYWORD2
-readFlash               KEYWORD2
 setI2CAddress           KEYWORD2
-writeFlash              KEYWORD2
-saveFlash               KEYWORD2
 readDebugData           KEYWORD2
 reset                   KEYWORD2
 isDataNew               KEYWORD2

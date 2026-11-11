@@ -158,27 +158,32 @@ class DFRobot_SGX6410(object):
     product_id = response[0] | (response[1] << 8)
     return product_id, tuple(response[2:5])
 
-  def set_operation_mode(self, mode):
+  def set_operation_mode(self, mode, save=False):
     '''!
     @brief Set SGX6410 operation mode
     @param mode Operation mode
+    @param save Commit the startup mode to Flash when True (default False)
     @n SGX_MODE_SUSPEND: Suspend mode
     @n SGX_MODE_IAQ: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
     @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
     @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
     @n Mode change is a maintenance action. The host restarts warm-up and clears is_new/valid.
-    @return True on success, False on failure
+    @return True/False when save=False; FDL status or None on communication failure when save=True
     '''
     if mode not in (self.SGX_MODE_SUSPEND, self.SGX_MODE_IAQ, self.SGX_MODE_ULP, self.SGX_MODE_PBAQ):
-      return False
+      return sgx_fdl_parameter_error if save else False
     if not self._write_cmd(sgx_cmd_set_operation_mode, [mode]):
-      return False
+      return None if save else False
     self._mode = mode
     self._sample_counter_new = False
     self._mode_timer_valid = mode in (self.SGX_MODE_IAQ, self.SGX_MODE_ULP, self.SGX_MODE_PBAQ)
     self._mode_start_time = self._millis()
     self._gas_data.is_new = False
     self._gas_data.valid = False
+    if save:
+      if not self._write_flash(sgx_startup_mode_shadow_addr, mode):
+        return None
+      return self._save_flash()
     return True
 
   def set_humidity_compensate(self, rh):
@@ -270,7 +275,22 @@ class DFRobot_SGX6410(object):
     response = self._read_cmd(sgx_cmd_get_tracking_number, 6)
     return bytes(response) if response is not None else None
 
-  def read_flash(self, address):
+  def set_i2c_address(self, address, save=False):
+    '''!
+    @brief Set the I2C address in Flash Shadow and optionally commit it to Flash
+    @param address 7-bit slave address (0x00-0x7F)
+    @param save Commit all Flash Shadow settings to Flash (default False)
+    @return FDL status on success or invalid address, None on communication failure
+    @n With save=False, success only means the Shadow write command was sent.
+    @n Save and reset the sensor to apply the address, then reconnect using it.
+    '''
+    if address < 0 or address > 0x7F:
+      return sgx_fdl_parameter_error
+    if not self._write_flash(sgx_i2c_address_shadow_addr, address):
+      return None
+    return self._save_flash() if save else sgx_fdl_ok
+
+  def _read_flash(self, address):
     '''!
     @brief Read one byte from the Flash Shadow area
     @param address Flash Shadow address: 0x00 I2C address, 0x03 startup mode
@@ -286,20 +306,20 @@ class DFRobot_SGX6410(object):
       return None
     return response[1]
 
-  def write_flash(self, address, data):
+  def _write_flash(self, address, data):
     '''!
     @brief Write one byte to the Flash Shadow area
     @param address Flash Shadow address: 0x00 I2C address, 0x03 startup mode
     @param data Byte to write
     @return True on success, False on failure
-    @n The new value stays in Shadow until save_flash() commits it.
-    @n Changing the I2C address takes effect after save_flash() and reset().
+    @n The new value stays in Shadow until _save_flash() commits it.
+    @n Changing the I2C address takes effect after _save_flash() and reset().
     '''
     if address not in (sgx_i2c_address_shadow_addr, sgx_startup_mode_shadow_addr):
       return False
     return self._write_cmd(sgx_cmd_write_flash, [address, data & 0xFF])
 
-  def save_flash(self):
+  def _save_flash(self):
     '''!
     @brief Commit the Flash Shadow area to Flash
     @return FDL status byte on success, None on failure

@@ -93,16 +93,17 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
       @n product_id is expected to be 0x2310.
     '''
 
-  def set_operation_mode(self, mode)
+  def set_operation_mode(self, mode, save=False)
     '''!
       @brief Set SGX6410 operation mode
       @param mode Operation mode
+      @param save Save startup mode to Flash when True (default False)
       @n SGX_MODE_SUSPEND: Suspend mode
       @n SGX_MODE_IAQ: IAQ 2nd generation, about 3 s sample period, 5 min warm-up
       @n SGX_MODE_ULP: Ultra-low power, about 90 s sample period, 15 min warm-up
       @n SGX_MODE_PBAQ: PBAQ, about 5 s sample period, 5 min warm-up
       @n Mode change is a maintenance action. The host restarts warm-up and clears is_new/valid.
-      @return True on success, False on failure
+      @return save=False: True/False; save=True: FDL status, or None on communication failure
     '''
 
   def set_humidity_compensate(self, rh)
@@ -153,29 +154,13 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
       @return Six-byte bytes on success, None on failure
     '''
 
-  def read_flash(self, address)
+  def set_i2c_address(self, address, save=False)
     '''!
-      @brief Read one byte from the Flash Shadow area
-      @param address Flash Shadow address: 0x00 I2C address, 0x03 startup mode
-      @return Byte value on success, None on failure
-      @n Other addresses are rejected on the host and send no command.
-    '''
-
-  def write_flash(self, address, data)
-    '''!
-      @brief Write one byte to the Flash Shadow area
-      @param address Flash Shadow address: 0x00 I2C address, 0x03 startup mode
-      @param data Byte to write
-      @return True on success, False on failure
-      @n The new value stays in Shadow until save_flash() commits it.
-      @n Changing the I2C address takes effect after save_flash() and reset().
-    '''
-
-  def save_flash(self)
-    '''!
-      @brief Commit the Flash Shadow area to Flash
-      @return FDL status byte on success, None on failure
-      @n Typical codes: sgx_fdl_ok (0x00) success, sgx_fdl_busy (0xFF) still processing.
+      @brief Set the I2C address and optionally save to Flash
+      @param address 7-bit slave address (0x00-0x7F)
+      @param save Commit Flash Shadow to Flash (default False)
+      @return FDL status, or None on communication failure
+      @n Save and reset the sensor, then reconnect using the new address.
     '''
 
   def read_debug_data(self, size)
@@ -212,15 +197,12 @@ Set `ctype = 0` for I2C or a non-zero value for UART.
 
 | Board        | Work Well | Work Wrong | Untested | Remarks |
 | ------------ | :-------: | :--------: | :------: | ------- |
-| RaspberryPi2 |           |            |    √     |         |
-| RaspberryPi3 |           |            |    √     |         |
-| RaspberryPi4 |           |            |    √     |         |
+| RaspberryPi4 |     √     |            |          |         |
 
 * Python Version
 
 | Python  | Work Well | Work Wrong | Untested | Remarks |
 | ------- | :-------: | :--------: | :------: | ------- |
-| Python2 |           |            |    √     |         |
 | Python3 |           |            |    √     |         |
 
 ## History

@@ -39,11 +39,8 @@ def setup():
   print('Changing startup mode to %s...' % get_mode_name(startup_mode))
   print('Keep power stable during this process.')
 
-  # Write the startup mode to Flash Shadow, then commit Flash
-  if not sgx6410.write_flash(sgx_startup_mode_shadow_addr, startup_mode):
-    print('Failed to write startup mode to Flash Shadow')
-    return
-  status = sgx6410.save_flash()
+  # Update the setting and commit it to Flash
+  status = sgx6410.set_operation_mode(startup_mode, save=True)
   if status is None:
     print('Failed to receive Flash write status')
     return

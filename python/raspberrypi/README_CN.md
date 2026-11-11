@@ -93,16 +93,17 @@ python3 examples/polling_read_data/polling_read_data.py
       @n product_id 期望为 0x2310。
     '''
 
-  def set_operation_mode(self, mode)
+  def set_operation_mode(self, mode, save=False)
     '''!
       @brief 设置 SGX6410 工作模式
       @param mode 工作模式
+      @param save True 时保存启动模式到 Flash，默认 False
       @n SGX_MODE_SUSPEND: 休眠模式
       @n SGX_MODE_IAQ: IAQ 第二代，采样周期约 3 s，预热 5 min
       @n SGX_MODE_ULP: 超低功耗，采样周期约 90 s，预热 15 min
       @n SGX_MODE_PBAQ: PBAQ，采样周期约 5 s，预热 5 min
       @n 改模式属于维护操作。主机侧会重新预热并清除 is_new/valid。
-      @return 成功 True，失败 False
+      @return save=False：True/False；save=True：FDL 状态码，通信失败为 None
     '''
 
   def set_humidity_compensate(self, rh)
@@ -153,29 +154,13 @@ python3 examples/polling_read_data/polling_read_data.py
       @return 成功返回 6 字节 bytes，失败返回 None
     '''
 
-  def read_flash(self, address)
+  def set_i2c_address(self, address, save=False)
     '''!
-      @brief 从 Flash Shadow 区读取 1 字节
-      @param address Flash Shadow 地址：0x00 为 I2C 地址，0x03 为启动模式
-      @return 成功返回字节值，失败返回 None
-      @n 其它地址在主机侧拒绝，不发送命令。
-    '''
-
-  def write_flash(self, address, data)
-    '''!
-      @brief 向 Flash Shadow 区写入 1 字节
-      @param address Flash Shadow 地址：0x00 为 I2C 地址，0x03 为启动模式
-      @param data 要写入的字节
-      @return 成功 True，失败 False
-      @n 新值会停留在 Shadow，直到 save_flash() 提交。
-      @n 修改 I2C 地址需 save_flash() 并 reset() 后生效。
-    '''
-
-  def save_flash(self)
-    '''!
-      @brief 将 Flash Shadow 区提交到 Flash
-      @return 成功返回 FDL 状态字节，失败返回 None
-      @n 常见码：sgx_fdl_ok（0x00）成功，sgx_fdl_busy（0xFF）仍在处理。
+      @brief 设置 I2C 地址，可选保存到 Flash
+      @param address 7 位从机地址（0x00-0x7F）
+      @param save 是否保存到 Flash，默认 False
+      @return FDL 状态码，通信失败返回 None
+      @n 保存并复位传感器后，使用新地址重新连接。
     '''
 
   def read_debug_data(self, size)
@@ -212,15 +197,12 @@ python3 examples/polling_read_data/polling_read_data.py
 
 | Board        | Work Well | Work Wrong | Untested | Remarks |
 | ------------ | :-------: | :--------: | :------: | ------- |
-| RaspberryPi2 |           |            |    √     |         |
-| RaspberryPi3 |           |            |    √     |         |
-| RaspberryPi4 |           |            |    √     |         |
+| RaspberryPi4 |     √     |            |          |         |
 
 * Python Version
 
 | Python  | Work Well | Work Wrong | Untested | Remarks |
 | ------- | :-------: | :--------: | :------: | ------- |
-| Python2 |           |            |    √     |         |
 | Python3 |           |            |    √     |         |
 
 ## 历史

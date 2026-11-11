@@ -296,9 +296,13 @@ bool DFRobot_SGX6410::isDataValid(void)
   return _gasData.valid;
 }
 
-DFRobot_SGX6410_I2C::DFRobot_SGX6410_I2C(TwoWire *pWire, uint8_t address, uint8_t sclPin, uint8_t sdaPin) : _pWire(pWire), _address(address)
+DFRobot_SGX6410_I2C::DFRobot_SGX6410_I2C(TwoWire *pWire, uint8_t address, uint8_t sclPin, uint8_t sdaPin)
+    : _pWire(pWire),
+      _address(address)
 #if defined(ESP32) || defined(ESP8266)
-  , _sclPin(sclPin), _sdaPin(sdaPin)
+      ,
+      _sclPin(sclPin),
+      _sdaPin(sdaPin)
 #endif
 {
 #if !defined(ESP32) && !defined(ESP8266)
@@ -346,9 +350,13 @@ int16_t DFRobot_SGX6410_I2C::interfaceRead(uint8_t *data, size_t len)
 #if defined(ARDUINO_AVR_UNO) || defined(ESP8266)
 DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(SoftwareSerial *sSerial, uint32_t baud) : _serial(sSerial), _baud(baud) {}
 #else
-DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(HardwareSerial *hSerial, uint32_t baud, int8_t rxPin, int8_t txPin) : _serial(hSerial), _baud(baud)
+DFRobot_SGX6410_UART::DFRobot_SGX6410_UART(HardwareSerial *hSerial, uint32_t baud, int8_t rxPin, int8_t txPin)
+    : _serial(hSerial),
+      _baud(baud)
 #if defined(ESP32)
-  , _rxPin(rxPin), _txPin(txPin)
+      ,
+      _rxPin(rxPin),
+      _txPin(txPin)
 #endif
 {
 #if !defined(ESP32)

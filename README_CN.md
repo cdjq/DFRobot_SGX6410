@@ -134,7 +134,7 @@ SKU: SEN0771
    * @n 改模式属于维护操作。主机侧会重新预热并清除 isNew/valid。
    * @param save 是否将该模式设为启动模式并保存全部 Flash Shadow 设置，默认 false
    * @return 成功返回 SGX_FDL_OK，模式无效返回 SGX_FDL_PARAMETER_ERROR，
-   * @n 通信失败返回 SGX_COMM_ERROR，否则返回 saveFlash() 收到的 FDL 状态。
+   * @n 通信失败返回 SGX_COMM_ERROR，否则返回保存 Flash 时收到的 FDL 状态。
    * @n 当前工作模式立即切换，本接口不自动复位。
    * @n save=false 时，成功仅表示模式设置命令已发送。
    * @n 保存失败时，当前工作模式已经切换。
@@ -207,61 +207,17 @@ SKU: SEN0771
   bool getTrackingNumber(uint8_t *number);
 
   /**
-   * @fn readFlash
-   * @brief 从 Flash Shadow 区读取 1 字节
-   * @param address 1 字节 Flash Shadow 地址
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR（0x00）：I2C 地址字节
-   * @n   bit7 忽略；bit6:0 为 7 位从机地址（0x00-0x7F），默认 0x38
-   * @n SGX_STARTUP_MODE_SHADOW_ADDR（0x03）：启动工作模式
-   * @param data 读出的字节
-   * @return bool
-   * @retval true  读取成功
-   * @retval false 不支持的地址或读取失败
-   * @n 其它地址在主机侧拒绝，不发送命令。
-   */
-  bool readFlash(uint8_t address, uint8_t &data);
-
-  /**
    * @fn setI2CAddress
    * @brief 设置 I2C 地址到 Flash Shadow，可选保存到 Flash
    * @param address 7 位从机地址，范围 0x00-0x7F；超出范围不发送命令
    * @param save 是否将全部 Flash Shadow 设置保存到 Flash，默认 false
    * @return 成功返回 SGX_FDL_OK，地址无效返回 SGX_FDL_PARAMETER_ERROR，
-   * @n 通信失败返回 SGX_COMM_ERROR，否则返回 saveFlash() 收到的 FDL 状态。
+   * @n 通信失败返回 SGX_COMM_ERROR，否则返回保存 Flash 时收到的 FDL 状态。
    * @n save=false 时，成功仅表示 Shadow 写入命令已发送。
    * @n 新地址保存并复位后生效，本接口不自动复位。
    * @n 复位后需使用新地址重新创建 I2C 对象。
    */
   uint8_t setI2CAddress(uint8_t address, bool save = false);
-
-  /**
-   * @fn writeFlash
-   * @brief 向 Flash Shadow 区写入 1 字节
-   * @param address 1 字节 Flash Shadow 地址
-   * @n SGX_I2C_ADDRESS_SHADOW_ADDR（0x00）：I2C 地址字节
-   * @n   bit7 忽略；bit6:0 为 7 位从机地址（0x00-0x7F），默认 0x38
-   * @n SGX_STARTUP_MODE_SHADOW_ADDR（0x03）：启动工作模式
-   * @param data 要写入的字节
-   * @n 写 I2C 地址（Shadow 0x00）时：bit7 忽略，bit6:0 为从机地址 0x00-0x7F
-   * @return bool
-   * @retval true  命令发送成功
-   * @retval false 不支持的地址或写入失败
-   * @n 新值会停留在 Shadow，直到 saveFlash() 提交。
-   * @n 修改 I2C 地址需 saveFlash() 并 reset() 后生效。
-   */
-  bool writeFlash(uint8_t address, uint8_t data);
-
-  /**
-   * @fn saveFlash
-   * @brief 将 Flash Shadow 区提交到 Flash
-   * @param status 传感器返回的 FDL 状态字节
-   * @return bool
-   * @retval true  已收到状态字节
-   * @retval false 写入或读取失败
-   * @n 请求无 payload。响应为 1 个原始 FDL 状态字节。
-   * @n 常见码：SGX_FDL_OK（0x00）成功，SGX_FDL_BUSY（0xFF）仍在处理。
-   */
-  bool saveFlash(uint8_t &status);
 
   /**
    * @fn readDebugData
@@ -311,6 +267,8 @@ SKU: SEN0771
 | Leonardo     |      √  |        |      |      |
 | ESP32        |      √  |        |     |      |
 | ESP8266      |      √  |        |      |      |
+| FireBeetle M0 |      √ |        |      |      |
+| micro:bit     |      √ |        |      |      |
 
 ## 历史
 
