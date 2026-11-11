@@ -1,7 +1,7 @@
 # DFRobot_SGX6410
 - [中文版](./README_CN.md)
 
-DFRobot_SGX6410 is the Arduino library for the SGX6410 MEMS air quality sensor (SKU: SEN0771). The sensor estimates indoor air quality and reports IAQ, TVOC, ethanol equivalent (ETOH), estimated CO2 (eCO2), and relative IAQ (RelIAQ).
+DFRobot_SGX6410 is the Arduino library for the SGX6410 MEMS air quality sensor (SKU: SEN0772). The sensor estimates indoor air quality and reports IAQ, TVOC, ethanol equivalent (ETOH), estimated CO2 (eCO2), and relative IAQ (RelIAQ).
 
 The host talks to the SGX6410 over I2C or UART using the same command frame, not a Gravity bridge register map. I2C uses a 7-bit slave address in bits 6:0 (default `0x38`); bit 7 of the programmable address byte is don't care. UART defaults to 9600 8N1.
 
@@ -10,7 +10,7 @@ Typical workflow: call `begin()` to read the current operation mode and initiali
 ## Product Link ([https://www.dfrobot.com](https://www.dfrobot.com))
 
 ```
-SKU: SEN0771
+SKU: SEN0772
 ```
 
 ## Table of Contents

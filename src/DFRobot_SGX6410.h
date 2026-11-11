@@ -1,6 +1,6 @@
 /*!
  * @file DFRobot_SGX6410.h
- * @brief Arduino driver for the SGX6410 MEMS air quality sensor (SEN0771)
+ * @brief Arduino driver for the SGX6410 MEMS air quality sensor (SEN0772)
  * @details Declares I2C/UART transports, command helpers, operation-mode enums,
  * @n cached gas measurement struct, and public APIs for mode, humidity and Flash Shadow.
  * @copyright Copyright (c) 2026 DFRobot Co.Ltd (http://www.dfrobot.com)

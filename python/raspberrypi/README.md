@@ -1,7 +1,7 @@
 # DFRobot_SGX6410
 - [中文版](./README_CN.md)
 
-DFRobot_SGX6410 is the Raspberry Pi Python library for the SGX6410 MEMS air quality sensor (SKU: SEN0771). The sensor estimates indoor air quality and reports IAQ, TVOC, ethanol equivalent (ETOH), estimated CO2 (eCO2), and relative IAQ (RelIAQ).
+DFRobot_SGX6410 is the Raspberry Pi Python library for the SGX6410 MEMS air quality sensor (SKU: SEN0772). The sensor estimates indoor air quality and reports IAQ, TVOC, ethanol equivalent (ETOH), estimated CO2 (eCO2), and relative IAQ (RelIAQ).
 
 The host talks to the SGX6410 over I2C or UART using the same command frame. I2C uses 7-bit address `0x38` on the Pi I2C bus (typically bus 1). UART defaults to 9600 8N1 on `/dev/ttyAMA0`.
 
@@ -10,7 +10,7 @@ Typical workflow: call `begin()` to verify product ID `0x2310` and the 6-byte tr
 ## Product Link
 
 ```
-SKU: SEN0771
+SKU: SEN0772
 ```
 
 ## Table of Contents

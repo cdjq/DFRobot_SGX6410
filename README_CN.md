@@ -10,7 +10,7 @@ DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器的 Arduino 库。传感�
 ## 产品链接 ([https://www.dfrobot.com.cn](https://www.dfrobot.com.cn))
 
 ```
-SKU: SEN0771
+SKU: SEN0772
 ```
 
 ## 目录

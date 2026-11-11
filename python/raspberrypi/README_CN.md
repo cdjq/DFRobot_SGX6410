@@ -1,7 +1,7 @@
 # DFRobot_SGX6410
 - [English Version](./README.md)
 
-DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器（SKU: SEN0771）的树莓派 Python 库。传感器用于评估室内空气质量，可输出 IAQ、TVOC、乙醇当量（ETOH）、估计 CO2（eCO2）和相对 IAQ（RelIAQ）。
+DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器（SKU: SEN0772）的树莓派 Python 库。传感器用于评估室内空气质量，可输出 IAQ、TVOC、乙醇当量（ETOH）、估计 CO2（eCO2）和相对 IAQ（RelIAQ）。
 
 主机通过 I2C 或 UART 与 SGX6410 通信，两者使用同一套命令帧。I2C 7 位地址为 `0x38`（树莓派通常为总线 1）；UART 默认 9600 8N1，串口为 `/dev/ttyAMA0`。
 
@@ -10,7 +10,7 @@ DFRobot_SGX6410 是 SGX6410 MEMS 空气质量传感器（SKU: SEN0771）的树�
 ## 产品链接
 
 ```
-SKU: SEN0771
+SKU: SEN0772
 ```
 
 ## 目录
